@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing Giulio Kart</title>
+    <link rel="stylesheet" href="elmogay.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* ===== BARRA AUTH ===== */
+        #authBar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 44px;
+            background: rgba(10,10,20,0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255,204,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 18px;
+            gap: 10px;
+            z-index: 99999;
+        }
+        #authBar .auth-nome {
+            color: #ffcc00;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        #authBar .auth-btn {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 0.8em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        #authBar .auth-btn:hover { opacity: 0.8; }
+        #authBar .btn-login {
+            background: transparent;
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+        }
+        #authBar .btn-register {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+        }
+        #authBar .btn-logout {
+            background: transparent;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        /* ===== MODALE LOGIN/REGISTRAZIONE ===== */
+
+        #authModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(15,32,39,0.96), rgba(32,58,67,0.96), rgba(44,83,100,0.96));
+            z-index: 999999;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+        #authModal.open { display: flex; }
+
+        #authModalBox {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 50px;
+            width: 90%;
+            max-width: 460px;
+            color: #fff;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: none;
+            font-family: 'Rajdhani', sans-serif;
+            margin: auto;
+        }
+
+        /* ---- Titolo principale ---- */
+        #authModalBox .modal-main-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6em;
+            letter-spacing: 3px;
+            margin: 0 0 4px 0;
+            color: #fff;
+        }
+        #authModalBox .modal-subtitle {
+            opacity: 0.6;
+            font-size: 0.85em;
+            letter-spacing: 2px;
+            margin-bottom: 28px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        /* ---- Chiudi ---- */
+        #authModalClose {
+            position: absolute; top: 14px; right: 18px;
+            background: none; border: none;
+            color: rgba(255,255,255,0.45);
+            font-size: 1.3em; cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        #authModalClose:hover { color: #ffcc00; }
+
+        /* ---- Campi ---- */
+        #authModalBox .modal-field {
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        #authModalBox .modal-field label {
+            display: block;
+            font-size: 0.74em;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        #authModalBox .modal-field input {
+            width: 100%;
+            padding: 13px 18px;
+            border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1em;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        #authModalBox .modal-field input::placeholder { color: rgba(255,255,255,0.35); }
+        #authModalBox .modal-field input:focus {
+            border-color: #ffcc00;
+            background: rgba(255,204,0,0.06);
+        }
+
+        /* ---- Barra forza password ---- */
+        #authModalBox .strength-bar {
+            display: flex; gap: 5px;
+            margin-top: 8px; padding: 0 4px;
+        }
+        #authModalBox .strength-bar div {
+            flex: 1; height: 3px; border-radius: 2px;
+            background: rgba(255,255,255,0.14);
+            transition: background 0.3s;
+        }
+        #authModalBox .strength-label {
+            font-size: 0.72em;
+            color: rgba(255,255,255,0.38);
+            margin-top: 4px;
+            text-align: right;
+            padding: 0 4px;
+            letter-spacing: 1px;
+        }
+
+        /* ---- Bottone primario ---- */
+        #authModalBox .modal-btn {
+            width: 100%;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85em;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        #authModalBox .modal-btn:hover { transform: translateY(-2px); }
+        #authModalBox .modal-btn:active { transform: scale(0.98); }
+        #authModalBox .modal-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ---- Separatore ---- */
+        #authModalBox .modal-separator {
+            display: flex; align-items: center; gap: 12px;
+            margin: 18px 0;
+        }
+        #authModalBox .modal-sep-line {
+            flex: 1; height: 1px;
+            background: rgba(255,255,255,0.14);
+        }
+        #authModalBox .modal-sep-text {
+            font-size: 0.76em;
+            color: rgba(255,255,255,0.38);
+            letter-spacing: 2px;
+        }
+
+        /* ---- Bottone Google ---- */
+        #authModalBox .modal-google-btn {
+            width: 100%;
+            padding: 13px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+            box-sizing: border-box;
+        }
+        #authModalBox .modal-google-btn:hover {
+            border-color: #ffcc00;
+            background: rgba(255,204,0,0.06);
+            transform: translateY(-2px);
+        }
+        #authModalBox .modal-google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+        /* ---- Link switch ---- */
+        #authModalBox .modal-switch {
+            margin-top: 20px;
+            font-size: 0.88em;
+            color: rgba(255,255,255,0.48);
+        }
+        #authModalBox .modal-switch a {
+            color: #ffcc00;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        #authModalBox .modal-switch a:hover { opacity: 0.75; }
+
+        /* ---- Messaggi errore / successo ---- */
+        #authModalBox .modal-errore {
+            color: #ff6b6b;
+            font-size: 0.86em;
+            margin-top: 6px;
+            min-height: 18px;
+            text-align: left;
+        }
+        #authModalBox .modal-successo {
+            color: #00ff88;
+            font-size: 0.86em;
+            margin-top: 6px;
+            min-height: 18px;
+            text-align: left;
+        }
+
+        /* ---- Password toggle ---- */
+        #authModalBox .pwd-wrap { position: relative; }
+        #authModalBox .pwd-wrap input { padding-right: 48px !important; }
+        #authModalBox .pwd-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(255,255,255,0.4);
+            padding: 4px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #authModalBox .pwd-toggle:hover { color: #ffcc00; }
+
+        /* ===== POPUP SALVA SCORE OSPITE ===== */
+        #ospiteScorePopup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
+        }
+        #ospiteScorePopup.open { display: flex; }
+        #ospiteScoreBox {
+            background: linear-gradient(135deg, #0f2027, #203a43);
+            border: 2px solid #ffcc00;
+            border-radius: 20px;
+            padding: 36px 40px;
+            width: 90%;
+            max-width: 420px;
+            color: #fff;
+            text-align: center;
+        }
+        #ospiteScoreBox h2 { color: #ffcc00; margin: 0 0 8px 0; }
+        #ospiteScoreBox .tempo-ospite { font-size: 2em; font-weight: bold; margin: 12px 0; color: #fff; }
+        #ospiteScoreBox p { color: #aaa; font-size: 0.9em; margin: 0 0 20px 0; }
+        #ospiteScoreBox .ospite-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        #ospiteScoreBox .ospite-btns button {
+            padding: 10px 24px; border-radius: 20px; border: none;
+            font-size: 0.9em; font-weight: bold; cursor: pointer; transition: opacity 0.2s;
+        }
+        #ospiteScoreBox .ospite-btns button:hover { opacity: 0.85; }
+        .btn-accedi-score {
+            background: linear-gradient(135deg, #ffcc00, #ff9900); color: #000;
+        }
+        .btn-registrati-score {
+            background: transparent; border: 1px solid #ffcc00 !important; color: #ffcc00;
+        }
+        .btn-ignora-score {
+            background: transparent; border: 1px solid #555 !important; color: #aaa;
+        }
+
+        /* ===== TOP 10 SOTTO LE MAPPE ===== */
+        .top10-container {
+            margin-top: 12px;
+            background: rgba(0,0,0,0.55);
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+        .top10-container h4 {
+            margin: 0 0 8px 0;
+            color: #ffcc00;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .top10-container ol {
+            margin: 0;
+            padding-left: 18px;
+            color: #fff;
+            font-size: 0.78em;
+        }
+        .top10-container ol li {
+            padding: 2px 0;
+        }
+        .top10-container ol li .tempo {
+            color: #ffcc00;
+            margin-left: 6px;
+        }
+        .top10-container .nessuno {
+            color: #aaa;
+            font-size: 0.78em;
+            text-align: center;
+            padding: 4px 0;
+        }
+
+        /* ===== MESSAGGIO FINE GARA ===== */
+        #fineGaraMessage {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.92);
+            border: 2px solid #ffcc00;
+            border-radius: 18px;
+            padding: 30px 40px;
+            text-align: center;
+            z-index: 999;
+            color: #fff;
+            min-width: 280px;
+        }
+        #fineGaraMessage h2 { color: #ffcc00; margin: 0 0 10px 0; font-size: 1.5em; }
+        #fineGaraMessage .tempo-finale { font-size: 2.2em; font-weight: bold; margin: 10px 0; }
+        #fineGaraMessage .link-score {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            font-weight: bold;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.95em;
+            cursor: pointer;
+            border: none;
+        }
+        #fineGaraMessage .link-score:hover { opacity: 0.85; }
+        
+        /* ===== PROFILO PANEL SCROLLBAR ===== */
+        #profilePanel ::-webkit-scrollbar { width: 3px; }
+        #profilePanel ::-webkit-scrollbar-track { background: transparent; }
+        #profilePanel ::-webkit-scrollbar-thumb { background: rgba(0,119,255,0.3); border-radius: 2px; }
+        #profilePanel ::-webkit-scrollbar-thumb:hover { background: rgba(0,180,255,0.5); }
+
+        /* Hover sull'authNome per indicare cliccabilità */
+        #authNome:hover { opacity: 0.8; text-shadow: 0 0 8px rgba(0,229,255,0.5) !important; }
+
+        /* ===== ADATTA AL VIEWPORT ===== */
+        html, body {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== BARRA AUTH IN ALTO ===== -->
+    <div id="authBar">
+        <span class="auth-nome" id="authNome" style="display:none;cursor:pointer;" onclick="apriProfilo()" title="Visualizza profilo"></span>
+        <button class="auth-btn btn-login" id="authLoginBtn" onclick="apriAuthModal('login.html')">Accedi</button>
+        <button class="auth-btn btn-register" id="authRegisterBtn" onclick="apriAuthModal('register.html')" style="
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.82em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-radius: 20px;
+            padding: 5px 14px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: border-color 0.2s, background 0.2s;
+        " onmouseover="this.style.borderColor='#ffcc00';this.style.background='rgba(255,204,0,0.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.background='rgba(255,255,255,0.08)'">
+            <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+            </svg>
+            Registrati
+        </button>
+        <button class="auth-btn btn-logout" id="authLogoutBtn" style="display:none;" onclick="eseguiLogout()">Esci</button>
+    </div>
+
+    <!-- ===== MODALE LOGIN / REGISTRAZIONE ===== -->
+    <div id="authModal">
+        <div id="authModalBox">
+            <button id="authModalClose" onclick="chiudiAuthModal()">✕</button>
+
+            <!-- ══ FORM LOGIN ══ -->
+            <div id="authLoginForm">
+                <h1 class="modal-main-title">🏎️ RACING GIULIO KART</h1>
+                <div class="modal-subtitle">Accedi al tuo account</div>
+
+                <div class="modal-field">
+                    <label>Email</label>
+                    <input type="email" id="authEmail" placeholder="player@example.com" autocomplete="email">
+                </div>
+                <div class="modal-field">
+                    <label>Password</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="authPassword" placeholder="La tua password" autocomplete="current-password"
+                               onkeydown="if(event.key==='Enter') eseguiLogin()">
+                        <button type="button" class="pwd-toggle" onclick="modalTogglePwd('authPassword',this)" tabindex="-1" title="Mostra/nascondi password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <div style="text-align:right; margin-top:6px;">
+                        <a href="forgot-password.html" style="font-size:0.76em; color:rgba(255,204,0,0.65); text-decoration:none; letter-spacing:0.5px; transition:color 0.2s;"
+                           onmouseover="this.style.color='#ffcc00'" onmouseout="this.style.color='rgba(255,204,0,0.65)'">🔐 Hai dimenticato la password?</a>
+                    </div>
+                </div>
+
+                <div class="modal-errore" id="authErrore"></div>
+
+                <button class="modal-btn" id="authLoginBtn2" onclick="eseguiLogin()">ENTRA NEL GIOCO ➜</button>
+
+                <div class="modal-separator">
+                    <div class="modal-sep-line"></div>
+                    <div class="modal-sep-text">oppure</div>
+                    <div class="modal-sep-line"></div>
+                </div>
+
+                <button class="modal-google-btn" onclick="gooogleLogin()">
+                    <svg class="modal-google-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+                    </svg>
+                    Continua con Google
+                </button>
+
+                <div class="modal-switch">
+                    Nuovo giocatore? <a onclick="switchAuthModal('register.html')">Registrati</a>
+                </div>
+            </div>
+
+            <!-- ══ FORM REGISTRAZIONE ══ -->
+            <div id="authRegisterForm" style="display:none;">
+                <h1 class="modal-main-title">🏎️ RACING GIULIO KART</h1>
+                <div class="modal-subtitle">Crea il tuo account</div>
+
+                <div class="modal-field">
+                    <label>Nickname</label>
+                    <input type="text" id="regNome" placeholder="Il tuo nickname..." maxlength="50">
+                </div>
+                <div class="modal-field">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="player@example.com" autocomplete="email">
+                </div>
+                <div class="modal-field">
+                    <label>Password</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="regPassword" placeholder="Min. 6 caratteri"
+                               oninput="modalCheckStrength(this.value)">
+                        <button type="button" class="pwd-toggle" onclick="modalTogglePwd('regPassword',this)" tabindex="-1" title="Mostra/nascondi password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <div class="strength-bar">
+                        <div id="ms1"></div><div id="ms2"></div><div id="ms3"></div><div id="ms4"></div>
+                    </div>
+                    <div class="strength-label" id="modalStrengthLabel"></div>
+                </div>
+                <div class="modal-field">
+                    <label>Conferma Password</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="regPassword2" placeholder="Ripeti la password"
+                               onkeydown="if(event.key==='Enter') eseguiRegistrazione()">
+                        <button type="button" class="pwd-toggle" onclick="modalTogglePwd('regPassword2',this)" tabindex="-1" title="Mostra/nascondi password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══ DOMANDE DI SICUREZZA ══ -->
+                <div style="display:flex;align-items:center;gap:10px;margin:18px 0 12px;">
+                    <div style="flex:1;height:1px;background:rgba(255,255,255,0.15);"></div>
+                    <div style="font-family:'Orbitron',monospace;font-size:0.55em;letter-spacing:2.5px;color:rgba(255,204,0,0.7);white-space:nowrap;text-transform:uppercase;">🛡 Domande di sicurezza</div>
+                    <div style="flex:1;height:1px;background:rgba(255,255,255,0.15);"></div>
+                </div>
+                <div style="background:rgba(255,204,0,0.04);border:1px solid rgba(255,204,0,0.18);border-radius:14px;padding:14px 14px 10px;margin-bottom:4px;">
+                    <div style="font-size:0.78em;color:rgba(255,255,255,0.5);margin-bottom:12px;line-height:1.5;">
+                        💡 Imposta due domande per <strong style="color:rgba(255,204,0,0.9);">recuperare la password</strong> in futuro. Le risposte devono essere <strong style="color:rgba(255,204,0,0.9);">una sola parola</strong>.
+                    </div>
+                    <div class="modal-field">
+                        <label>Prima domanda</label>
+                        <select id="regDomanda1" style="width:100%;padding:11px 16px;border-radius:30px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95em;outline:none;appearance:none;transition:border-color 0.2s;">
+                            <option value="" style="background:#1a2a3a;">— Scegli una domanda —</option>
+                            <option value="Come si chiama il tuo animale domestico?" style="background:#1a2a3a;">Come si chiama il tuo animale domestico?</option>
+                            <option value="Qual è il nome della tua città natale?" style="background:#1a2a3a;">Qual è il nome della tua città natale?</option>
+                            <option value="Come si chiama il tuo miglior amico d'infanzia?" style="background:#1a2a3a;">Come si chiama il tuo miglior amico d'infanzia?</option>
+                            <option value="Qual è il tuo cibo preferito?" style="background:#1a2a3a;">Qual è il tuo cibo preferito?</option>
+                            <option value="Come si chiama la tua scuola elementare?" style="background:#1a2a3a;">Come si chiama la tua scuola elementare?</option>
+                            <option value="Qual è il colore della tua macchina preferita?" style="background:#1a2a3a;">Qual è il colore della tua macchina preferita?</option>
+                            <option value="Come si chiama il tuo cantante preferito?" style="background:#1a2a3a;">Come si chiama il tuo cantante preferito?</option>
+                            <option value="Qual è il nome del tuo film preferito?" style="background:#1a2a3a;">Qual è il nome del tuo film preferito?</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label>Risposta (una parola)</label>
+                        <input type="text" id="regRisposta1" placeholder="Es: Fido" maxlength="40" autocomplete="off"
+                               oninput="this.value=this.value.replace(/\s/g,'')">
+                        <div style="font-size:0.68em;color:rgba(255,204,0,0.5);margin-top:5px;padding:0 6px;">⚡ Una sola parola, senza spazi</div>
+                    </div>
+                    <div class="modal-field" style="margin-top:8px;">
+                        <label>Seconda domanda</label>
+                        <select id="regDomanda2" style="width:100%;padding:11px 16px;border-radius:30px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95em;outline:none;appearance:none;transition:border-color 0.2s;">
+                            <option value="" style="background:#1a2a3a;">— Scegli una domanda —</option>
+                            <option value="Come si chiama il tuo animale domestico?" style="background:#1a2a3a;">Come si chiama il tuo animale domestico?</option>
+                            <option value="Qual è il nome della tua città natale?" style="background:#1a2a3a;">Qual è il nome della tua città natale?</option>
+                            <option value="Come si chiama il tuo miglior amico d'infanzia?" style="background:#1a2a3a;">Come si chiama il tuo miglior amico d'infanzia?</option>
+                            <option value="Qual è il tuo cibo preferito?" style="background:#1a2a3a;">Qual è il tuo cibo preferito?</option>
+                            <option value="Come si chiama la tua scuola elementare?" style="background:#1a2a3a;">Come si chiama la tua scuola elementare?</option>
+                            <option value="Qual è il colore della tua macchina preferita?" style="background:#1a2a3a;">Qual è il colore della tua macchina preferita?</option>
+                            <option value="Come si chiama il tuo cantante preferito?" style="background:#1a2a3a;">Come si chiama il tuo cantante preferito?</option>
+                            <option value="Qual è il nome del tuo film preferito?" style="background:#1a2a3a;">Qual è il nome del tuo film preferito?</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label>Risposta (una parola)</label>
+                        <input type="text" id="regRisposta2" placeholder="Es: Roma" maxlength="40" autocomplete="off"
+                               oninput="this.value=this.value.replace(/\s/g,'')">
+                        <div style="font-size:0.68em;color:rgba(255,204,0,0.5);margin-top:5px;padding:0 6px;">⚡ Una sola parola, senza spazi</div>
+                    </div>
+                </div>
+
+                <div class="modal-errore" id="regErrore"></div>
+                <div class="modal-successo" id="regSuccesso"></div>
+
+                <button class="modal-btn" id="authRegBtn2" onclick="eseguiRegistrazione()">CREA ACCOUNT ➜</button>
+
+                <div class="modal-separator">
+                    <div class="modal-sep-line"></div>
+                    <div class="modal-sep-text">oppure</div>
+                    <div class="modal-sep-line"></div>
+                </div>
+
+                <button class="modal-google-btn" onclick="gooogleLogin()">
+                    <svg class="modal-google-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+                    </svg>
+                    Registrati con Google
+                </button>
+
+                <div class="modal-switch">
+                    Hai già un account? <a onclick="switchAuthModal('login')">Accedi</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== POPUP SALVA SCORE OSPITE ===== -->
+    <div id="ospiteScorePopup">
+        <div id="ospiteScoreBox">
+            <h2>🏁 GARA COMPLETATA!</h2>
+            <div class="tempo-ospite" id="ospiteTempoDisplay">00:00.000</div>
+            <p>Accedi o registrati per salvare il tuo score nella classifica!</p>
+            <div class="ospite-btns">
+                <button class="btn-accedi-score" onclick="chiudiOspitePopup(); apriAuthModal('login.html')">🔑 Accedi</button>
+                <button class="btn-registrati-score" onclick="chiudiOspitePopup(); apriAuthModal('register.html')">📝 Registrati</button>
+                <button class="btn-ignora-score" onclick="chiudiOspitePopup(); if(window._pendingScore)window._pendingScore=null;">Continua senza salvare</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PROFILE OVERLAY ===== -->
+    <div id="profileOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);" onclick="chiudiProfilo()"></div>
+
+    <!-- ===== PROFILE PANEL ===== -->
+    <div id="profilePanel" style="
+      position:fixed;top:0;right:-420px;width:380px;height:100vh;
+      z-index:999999;
+      background:linear-gradient(180deg,#08101e 0%,#050c16 100%);
+      border-left:1px solid rgba(0,119,255,0.3);
+      box-shadow:-10px 0 50px rgba(0,0,0,0.85),0 0 0 1px rgba(0,229,255,0.04);
+      transition:right 0.38s cubic-bezier(0.16,1,0.3,1);
+      display:flex;flex-direction:column;overflow:hidden;
+      font-family:'Rajdhani',sans-serif;
+    ">
+      <div style="height:2px;background:linear-gradient(90deg,transparent,#0077ff,#00e5ff,#0077ff,transparent);box-shadow:0 0 14px rgba(0,119,255,0.7);flex-shrink:0;"></div>
+
+      <!-- PANEL HEADER -->
+      <div style="padding:18px 22px 14px;border-bottom:1px solid rgba(0,119,255,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:'Orbitron',monospace;font-size:0.6em;letter-spacing:4px;color:rgba(0,180,255,0.55);text-transform:uppercase;">⚡ PROFILO PILOTA</div>
+        <button onclick="chiudiProfilo()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:1.2em;cursor:pointer;transition:color 0.2s;line-height:1;padding:4px;" onmouseover="this.style.color='#00e5ff'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">✕</button>
+      </div>
+
+      <!-- SCROLLABLE CONTENT -->
+      <div style="flex:1;overflow-y:auto;padding:0 20px 24px;scrollbar-width:thin;scrollbar-color:rgba(0,119,255,0.3) transparent;">
+
+        <!-- AVATAR + NICKNAME -->
+        <div style="text-align:center;padding:22px 0 14px;">
+          <div style="position:relative;display:inline-block;">
+            <div id="profileAvatarWrap" style="
+              width:90px;height:90px;border-radius:50%;
+              border:2px solid rgba(0,180,255,0.45);
+              box-shadow:0 0 0 5px rgba(0,119,255,0.08),0 0 28px rgba(0,119,255,0.28);
+              background:#0a1628;margin:0 auto;overflow:hidden;cursor:pointer;
+              transition:border-color 0.2s,box-shadow 0.2s;
+              display:flex;align-items:center;justify-content:center;position:relative;
+            " onclick="document.getElementById('profileAvatarInput').click()"
+               onmouseover="this.style.borderColor='#00e5ff';document.getElementById('profileAvatarHover').style.opacity='1'"
+               onmouseout="this.style.borderColor='rgba(0,180,255,0.45)';document.getElementById('profileAvatarHover').style.opacity='0'"
+               title="Clicca per cambiare avatar">
+              <span id="profileAvatarEmoji" style="font-size:2.6em;line-height:1;">🏎️</span>
+              <img id="profileAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:50%;" alt="avatar">
+              <div id="profileAvatarHover" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;font-size:1.4em;">📷</div>
+            </div>
+            <input type="file" id="profileAvatarInput" accept="image/*" style="display:none;" onchange="caricaAvatarCustom(this)">
+          </div>
+
+          <div id="profileNicknameWrap" style="margin-top:12px;">
+            <div id="profileNicknameDisplay" style="font-family:'Orbitron',monospace;font-size:1em;font-weight:700;letter-spacing:2px;color:#fff;text-shadow:0 0 12px rgba(0,229,255,0.35);">—</div>
+            <button onclick="abilitaModificaNickname()" style="margin-top:7px;background:none;border:1px solid rgba(0,119,255,0.2);color:rgba(0,180,255,0.6);border-radius:20px;padding:4px 14px;font-size:0.7em;letter-spacing:1.5px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;transition:all 0.2s;text-transform:uppercase;" onmouseover="this.style.borderColor='#00b4ff';this.style.color='#00e5ff'" onmouseout="this.style.borderColor='rgba(0,119,255,0.2)';this.style.color='rgba(0,180,255,0.6)'">✏ Cambia Nickname</button>
+          </div>
+          <div id="profileNicknameEdit" style="display:none;margin-top:10px;">
+            <input id="profileNicknameInput" type="text" maxlength="30" style="
+              background:rgba(0,40,120,0.18);border:1.5px solid rgba(0,119,255,0.35);
+              border-radius:8px;color:#fff;font-family:'Rajdhani',sans-serif;
+              font-size:0.95em;padding:9px 14px;width:100%;box-sizing:border-box;
+              outline:none;text-align:center;letter-spacing:1px;
+            " placeholder="Nuovo nickname..." onkeydown="if(event.key==='Enter')salvaNickname()">
+            <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
+              <button onclick="salvaNickname()" style="background:linear-gradient(135deg,#003fa3,#0077ff);color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:0.78em;font-weight:700;letter-spacing:1px;font-family:'Rajdhani',sans-serif;">✓ SALVA</button>
+              <button onclick="annullaNickname()" style="background:rgba(255,255,255,0.04);color:#aaa;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 16px;cursor:pointer;font-size:0.78em;font-family:'Rajdhani',sans-serif;">Annulla</button>
+            </div>
+            <div id="profileNicknameMsg" style="font-size:0.74em;margin-top:6px;min-height:16px;color:#ff6b6b;text-align:center;"></div>
+          </div>
+        </div>
+
+        <!-- AVATAR PREDEFINITI -->
+        <div style="margin-bottom:18px;">
+          <div style="font-family:'Orbitron',monospace;font-size:0.55em;letter-spacing:3px;color:rgba(0,180,255,0.45);text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;">
+            Scegli Avatar
+            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,119,255,0.25),transparent);"></div>
+          </div>
+          <div id="avatarGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;"></div>
+        </div>
+
+        <!-- STATISTICHE -->
+        <div style="margin-bottom:16px;">
+          <div style="font-family:'Orbitron',monospace;font-size:0.55em;letter-spacing:3px;color:rgba(0,180,255,0.45);text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;">
+            Statistiche
+            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,119,255,0.25),transparent);"></div>
+          </div>
+          <div id="profileStats" style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+            <div style="padding:10px 12px;background:rgba(0,119,255,0.04);border:1px solid rgba(0,119,255,0.08);border-radius:6px;text-align:center;">
+              <div style="font-family:'Orbitron',monospace;font-size:1.3em;font-weight:900;color:#00e5ff;" id="statGareTotali">—</div>
+              <div style="font-size:0.65em;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Gare totali</div>
+            </div>
+            <div style="padding:10px 12px;background:rgba(0,119,255,0.04);border:1px solid rgba(0,119,255,0.08);border-radius:6px;text-align:center;">
+              <div style="font-family:'Orbitron',monospace;font-size:1.3em;font-weight:900;color:#ffd700;" id="statMappeGiocate">—</div>
+              <div style="font-size:0.65em;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Mappe giocate</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MIGLIORI TEMPI PER MAPPA -->
+        <div style="margin-bottom:8px;">
+          <div style="font-family:'Orbitron',monospace;font-size:0.55em;letter-spacing:3px;color:rgba(0,180,255,0.45);text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;">
+            🏆 Migliori Tempi
+            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,119,255,0.25),transparent);"></div>
+          </div>
+          <div id="profileBestScores" style="display:flex;flex-direction:column;gap:7px;">
+            <div style="text-align:center;color:rgba(255,255,255,0.25);font-size:0.8em;padding:20px;">Caricamento...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LOGOUT -->
+      <div style="padding:14px 20px;border-top:1px solid rgba(0,119,255,0.08);flex-shrink:0;">
+        <button onclick="eseguiLogout()" style="
+          width:100%;padding:10px;
+          background:rgba(255,50,50,0.05);
+          border:1px solid rgba(255,80,80,0.18);
+          color:rgba(255,100,100,0.65);
+          border-radius:4px;font-family:'Rajdhani',sans-serif;
+          font-size:0.82em;font-weight:700;letter-spacing:2px;
+          cursor:pointer;text-transform:uppercase;transition:all 0.2s;
+        " onmouseover="this.style.background='rgba(255,50,50,0.1)';this.style.borderColor='rgba(255,80,80,0.45)';this.style.color='#ff6b6b'" onmouseout="this.style.background='rgba(255,50,50,0.05)';this.style.borderColor='rgba(255,80,80,0.18)';this.style.color='rgba(255,100,100,0.65)'">⏻  ESCI DALL'ACCOUNT</button>
+      </div>
+    </div>
+
+    <!-- SCHERMATA INIZIALE -->
+    <div id="splashScreen" style="display:none;">
+        <div id="splashContent">
+            <h1 id="splashTitle">RACING GIULIO KART</h1>
+            <br>
+            <button id="startButton">INIZIA GARA</button>
+        </div>
+    </div>
+
+    <!-- SCHERMATA SELEZIONE MAPPA -->
+    <div id="selezioneMappeScreen" style="display: none;">
+        <div id="selezioneMappeContent">
+            
+            <h2 id="selezioneTitle">SELEZIONA LA TUA MAPPA</h2>
+
+            <div id="containerMappe">
+                <!-- Mappa Montagna -->
+                <div class="map-card" data-mappa="montagna" data-idcircuito="1">
+                    <div class="map-preview" style="background: linear-gradient(135deg, #4A90E2, #2C6FB4);">
+                        <span class="map-icon"><img src="img2/montagna.png" height="200"></span>
+                    </div>
+                    <div class="map-info">
+                        <br>
+                        <h3>MONTAGNA</h3>
+                        <div class="map-stats">
+                            <p style="color: #aaa; font-size: 0.85em;">Sfida le montagne</p>
+                        </div>
+                        <button class="top10-btn" onclick="mostraTop10Modal(1); event.stopPropagation();">📊 TOP 10</button>
+                    </div>
+                </div>
+
+                <!-- Mappa Città -->
+                <div class="map-card" data-mappa="citta" data-idcircuito="2">
+                    <div class="map-preview" style="background: linear-gradient(135deg, #E24A4A, #B42C2C);">
+                        <span class="map-icon"><img src="img3/città.png" height="200"></span>
+                    </div>
+                    <div class="map-info">
+                        <br>
+                        <h3>CITTÀ</h3>
+                        <div class="map-stats">
+                            <p style="color: #aaa; font-size: 0.85em;">Viaggia tra i palazzi</p>
+                        </div>
+                            <button class="top10-btn" onclick="mostraTop10Modal(2); event.stopPropagation();">📊 TOP 10</button>
+                    </div>
+                </div>
+               
+                <!-- Mappa Foresta -->
+                <div class="map-card" data-mappa="deserto" data-idcircuito="3">
+                    <div class="map-preview" style="background: linear-gradient(135deg, #E2B54A, #B4922C);">
+                        <span class="map-icon"><img src="img/salsal.png" height="200"></span>
+                    </div>
+                    <div class="map-info">
+                        <br>
+                        <h3>FORESTA</h3>
+                        <div class="map-stats">
+                            <p style="color: #aaa; font-size: 0.85em;">Affronta la foresta</p>
+                        </div>
+                        <button class="top10-btn" onclick="mostraTop10Modal(3); event.stopPropagation();">📊 TOP 10</button>
+                    </div>
+                </div>
+
+                <!-- Crafter Personalizzato -->
+                <div class="map-card" id="crafterCard">
+                    <div class="map-preview" style="background: linear-gradient(135deg, #9B59B6, #8E44AD);">
+                        <span class="map-icon"><img src="img/marcello e elmo muratori.jpeg" height="220" width="220"></span>
+                    </div>
+                    <div class="map-info">
+                        <br>
+                        <h3>CRAFTER</h3>
+                        <div class="map-stats">
+                            <p style="color: #aaa; font-size: 0.85em;">Crea la tua mappa</p>
+                        </div>
+                        <div id="crafterLockBadge" style="display:none;margin-top:8px;padding:5px 10px;background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.4);border-radius:4px;text-align:center;font-size:0.75em;color:#ffcc00;letter-spacing:1px;">
+                            🔒 Accedi per sbloccare
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="backButton">← INDIETRO</button>
+        </div>
+    </div>
+
+    <!-- SCHERMATA CRAFTER -->
+    <div id="crafterScreen" style="display: none;">
+        <div id="crafterContent">
+            <h2 id="crafterTitle">CRAFTER - CREA LA TUA MAPPA</h2>
+
+            <div id="crafterContainer">
+                <div id="crafterPreview">
+                    <canvas id="crafterCanvas"></canvas>
+                </div>
+                <div id="crafterControls">
+                    <div class="control-section">
+                        <h3>DENSITÀ OSTACOLI</h3>
+                        <div class="control-row">
+                            <label for="obstacleDensity">Densità:</label>
+                            <select id="obstacleDensity">
+                                <option value="bassa">Bassa</option>
+                                <option value="normale" selected>Normale</option>
+                                <option value="alta">Alta</option>
+                                <option value="massima">Massima</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h3>SFONDO</h3>
+                        <div class="control-row">
+                            <label for="backgroundFile">Carica immagine:</label>
+                            <input type="file" id="backgroundFile" accept="image/*">
+                        </div>
+                        <div class="control-row">
+                            <label for="backgroundChoice">Scegli uno sfondo di gioco:</label>
+                            <select id="backgroundChoice">
+                                <option value="">-- Nessuno --</option>
+                                <option value="montagna">Montagna</option>
+                                <option value="citta">Città</option>
+                                <option value="deserto">Foresta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h3>CONTENUTO MAPPA</h3>
+                        <div class="control-row">
+                            <label>Ostacolo di tracciato <span style="color:#ff9800;font-size:0.85em;">(obbligatorio)</span>:</label>
+                            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;max-height:260px;overflow:auto;">
+                                <div style="padding:8px;background:rgba(0,0,0,0.04);border-radius:8px;">
+                                    <strong>Ostacoli</strong>
+                                    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+                                        <label><input class="obstacle-checkbox" type="radio" name="trackObstacle" value="img/blocco.png" data-file="img/blocco.png" data-category="track" id="obs_img_blocco"> Blocco</label>
+                                        <label><input class="obstacle-checkbox" type="radio" name="trackObstacle" value="img/sparaneve.png" data-file="img/sparaneve.png" data-category="track" id="obs_img_sparaneve"> Sparaneve</label>
+                                        <label><input class="obstacle-checkbox" type="radio" name="trackObstacle" value="img/tronco.png" data-file="img/tronco.png" data-category="track" id="obs_img_tronco"> Tronco</label>
+                                    </div>
+                                </div>
+                                <div style="padding:8px;background:transparent;border-radius:8px;height:6px;">&nbsp;</div>
+                                <div style="padding:8px;background:transparent;border-radius:8px;height:6px;">&nbsp;</div>
+                                <div style="padding:8px;background:rgba(0,0,0,0.02);border-radius:8px;margin-top:6px;">
+                                    <strong>Elementi mappa (set)</strong>
+                                    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;padding-left:6px;">
+                                        <label><input type="radio" name="mapElements" value="" checked> Nessuno</label>
+                                        <label><input type="radio" name="mapElements" value="montagna"> Montagna</label>
+                                        <label><input type="radio" name="mapElements" value="deserto"> Foresta</label>
+                                        <label><input type="radio" name="mapElements" value="citta"> Città</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h3>COLORI STRADA</h3>
+                        <div class="control-row">
+                            <label for="roadColor">Asfalto:</label>
+                            <input type="color" id="roadColor" value="#ffffff">
+                        </div>
+                        <div class="control-row">
+                            <label for="rumbleColor">Rumble (bordi):</label>
+                            <input type="color" id="rumbleColor" value="#ffffff">
+                        </div>
+                        <div class="control-row">
+                            <label for="sandColor">Sabbia/Erba:</label>
+                            <input type="color" id="sandColor" value="#ffffff">
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h3>CURVE</h3>
+                        <div class="control-row">
+                            <label for="curveDifficulty">Difficoltà curve:</label>
+                            <select id="curveDifficulty">
+                                <option value="facile">Facile</option>
+                                <option value="normale" selected>Normale</option>
+                                <option value="difficile">Difficile</option>
+                                <option value="estremo">Estremo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h3>SALVA MAPPA</h3>
+                        <div class="control-row">
+                            <label for="mapName">Nome mappa:</label>
+                            <input type="text" id="mapName" placeholder="Es: La mia mappa">
+                        </div>
+                    </div>
+
+                    <!-- TOP 10 NEL CRAFTER (per mappa custom non ha senso, mostriamo le 3 mappe) -->
+                    <div class="control-section" id="crafterTop10Section">
+                        <h3>🏆 TOP 10 MAPPE</h3>
+                        <div style="margin-bottom:8px;">
+                            <select id="crafterTop10Select" style="width:100%;padding:6px;border-radius:8px;">
+                                <option value="1">Montagna</option>
+                                <option value="2">Città</option>
+                                <option value="3">Foresta</option>
+                            </select>
+                        </div>
+                        <div class="top10-container" id="top10-crafter">
+                            <p class="nessuno">Seleziona una mappa</p>
+                        </div>
+                    </div>
+
+                    <div id="crafterButtons">
+                        <button id="applyButton" class="crafter-button apply-btn">APPLICA MODIFICHE</button>
+                        <button id="resetButton" class="crafter-button reset-btn">RESET</button>
+                        <button id="saveButton" class="crafter-button save-btn">SALVA MAPPA</button>
+                        <button id="playButton2" class="crafter-button play-btn">GIOCA</button>
+                        <button id="backCrafterButton" class="crafter-button back-btn">INDIETRO</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="savedMapsSection">
+                <h3>MAPPE SALVATE</h3>
+                <div id="savedMapsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GIOCO PRINCIPALE -->
+    <div id="gamecenter" style="display: none;">
+        <div id="dashboard">Dashboard</div>
+
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+            <canvas id="tachimetro"></canvas>
+
+            <!-- Messaggio Game Over -->
+            <div id="gameOverMessage">GAME OVER!</div>
+
+            <!-- Messaggio Fine Gara con tempo -->
+            <div id="fineGaraMessage">
+                <h2>🏁 GARA COMPLETATA!</h2>
+                <div class="tempo-finale" id="tempoFinaleDisplay">00:00.000</div>
+                <div style="font-size:0.85em; color:#aaa; margin-top:4px;" id="nakNameDisplay"></div>
+                <div id="posizionamentoMessage"></div>
+                <button class="link-score" id="visualizzaScoreBtn">🏆 VISUALIZZA TOP 10</button>
+                <div id="gameOverControls">
+                    <button id="restartButton" class="game-over-button">RIGIOCA</button>
+                    <button id="changeMapButton" class="game-over-button">CAMBIA MAPPA</button>
+                    <button id="editMapButton" class="game-over-button">MODIFICA MAPPA</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button id="playButton">PLAY</button>
+            <button id="menuButton" class="game-over-button">MENU</button>
+
+            <div id="radio">
+                <div class="radio-screen">
+                    <div id="songName">Canzone</div>
+                </div>
+                <div class="radio-buttons">
+                    <button onclick="prevSong()">⏮</button>
+                    <button onclick="playPause()">⏯</button>
+                    <button onclick="nextSong()">⏭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="radioPlayer"></audio>
+    <div id="game3dContainer" style="display:none; position:fixed; inset:0; background:#000; z-index:9000; flex-direction:column;">
+
+    <!-- HUD 3D -->
+    <div id="hud3d" style="display:none; position:absolute; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:flex-start; padding:16px 24px; pointer-events:none; z-index:10;">
+        <div id="timer3d" style="font-family:'Orbitron',monospace; font-size:1.8em; font-weight:900; color:#00f5ff; text-shadow:0 0 15px #00f5ff; letter-spacing:4px;">⏱ 00:00.000</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <div id="speed3d" style="font-family:'Orbitron',monospace; font-size:2.2em; font-weight:900; color:#ffe600; text-shadow:0 0 15px #ffe600; letter-spacing:2px;">0</div>
+            <div style="font-size:0.75em; color:rgba(255,230,0,0.6); letter-spacing:3px;">KM/H</div>
+        </div>
+    </div>
+
+    <!-- Bottone menu in gioco -->
+    <div style="position:absolute; top:16px; left:50%; transform:translateX(-50%); z-index:11;">
+        <button onclick="if(confirm('Tornare al menu?')) backFromGame3D();"
+            style="padding:8px 24px; background:transparent; border:1px solid rgba(0,245,255,0.3); color:rgba(0,245,255,0.7); font-family:'Orbitron',monospace; font-size:0.65em; letter-spacing:2px; cursor:pointer; border-radius:2px;">
+            ← MENU
+        </button>
+    </div>
+
+    <!-- Hint tasti -->
+    <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:12px; pointer-events:none; z-index:10;">
+        <div style="background:rgba(0,0,0,0.7); border:1px solid rgba(0,245,255,0.3); border-radius:4px; padding:6px 14px; font-family:'Orbitron',monospace; font-size:0.7em; letter-spacing:2px; color:rgba(0,245,255,0.8);">↑ ACCELERA</div>
+        <div style="background:rgba(0,0,0,0.7); border:1px solid rgba(0,245,255,0.3); border-radius:4px; padding:6px 14px; font-family:'Orbitron',monospace; font-size:0.7em; letter-spacing:2px; color:rgba(0,245,255,0.8);">↓ FRENA</div>
+        <div style="background:rgba(0,0,0,0.7); border:1px solid rgba(0,245,255,0.3); border-radius:4px; padding:6px 14px; font-family:'Orbitron',monospace; font-size:0.7em; letter-spacing:2px; color:rgba(0,245,255,0.8);">← → STERZA</div>
+    </div>
+
+    <!-- Canvas Three.js -->
+    <canvas id="canvas3d" style="width:100%; height:100%; display:block;"></canvas>
+
+    <!-- Overlay START -->
+    <div id="overlay3d" style="position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(4,6,15,0.9) 0%, #04060f 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; gap:32px; z-index:20;">
+        <h1 style="font-family:'Orbitron',monospace; font-size:clamp(1.8em,5vw,3.5em); font-weight:900; letter-spacing:8px; color:#00f5ff; text-shadow:0 0 20px #00f5ff,0 0 60px rgba(0,245,255,0.4); text-align:center;">MONTAGNA 3D</h1>
+        <p style="font-family:'Rajdhani',sans-serif; font-size:1em; letter-spacing:3px; color:rgba(255,255,255,0.45);">RACING GIULIO KART — THREE.JS</p>
+        <button onclick="startRace3D()"
+            style="padding:16px 56px; background:transparent; border:1px solid #00f5ff; color:#00f5ff; font-family:'Orbitron',monospace; font-size:0.9em; font-weight:700; letter-spacing:5px; cursor:pointer; border-radius:2px; transition:background 0.3s,color 0.3s,box-shadow 0.3s;"
+            onmouseover="this.style.background='#00f5ff';this.style.color='#000';this.style.boxShadow='0 0 30px rgba(0,245,255,0.5)';"
+            onmouseout="this.style.background='transparent';this.style.color='#00f5ff';this.style.boxShadow='none';">
+            ▶ INIZIA GARA
+        </button>
+    </div>
+
+    <!-- Collision / Fine gara -->
+    <div id="collisionMsg3d" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.8); flex-direction:column; justify-content:center; align-items:center; gap:24px; z-index:20;">
+        <h2 style="font-family:'Orbitron',monospace; font-size:clamp(2em,6vw,4.5em); font-weight:900; letter-spacing:8px; color:#ff2d55; text-shadow:0 0 20px #ff2d55,0 0 60px rgba(255,45,85,0.5);">GAME OVER</h2>
+        <div id="tempoFinale3d" style="font-family:'Orbitron',monospace; font-size:2em; font-weight:700; color:#00f5ff; letter-spacing:4px; text-shadow:0 0 15px #00f5ff;"></div>
+        <div id="nakName3d" style="font-family:'Rajdhani',sans-serif; font-size:1em; color:rgba(255,255,255,0.5); letter-spacing:2px;"></div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center;">
+            <button onclick="restartGame3D()"
+                style="padding:12px 36px; background:transparent; border:1px solid #00f5ff; color:#00f5ff; font-family:'Orbitron',monospace; font-size:0.75em; font-weight:700; letter-spacing:3px; cursor:pointer; border-radius:2px; transition:background 0.3s,color 0.3s;"
+                onmouseover="this.style.background='#00f5ff';this.style.color='#000';"
+                onmouseout="this.style.background='transparent';this.style.color='#00f5ff';">
+                ↺ RIGIOCA
+            </button>
+            <button onclick="backFromGame3D()"
+                style="padding:12px 36px; background:transparent; border:1px solid #ff2d55; color:#ff2d55; font-family:'Orbitron',monospace; font-size:0.75em; font-weight:700; letter-spacing:3px; cursor:pointer; border-radius:2px; transition:background 0.3s,color 0.3s;"
+                onmouseover="this.style.background='#ff2d55';this.style.color='#fff';"
+                onmouseout="this.style.background='transparent';this.style.color='#ff2d55';">
+                ← MENU
+            </button>
+        </div>
+    </div>
+
+</div>
+    <!-- MODALE TOP 10 -->
+<div id="top10Modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(5px); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+    <div style="background:#1a1a2e; border:2px solid #ffcc00; border-radius:15px; padding:30px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; color:#fff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0; color:#ffcc00;">🏆 TOP 10</h2>
+            <button onclick="chiudiTop10Modal()" style="background:none; border:none; color:#ffcc00; font-size:1.5em; cursor:pointer;">✕</button>
+        </div>
+        <div id="top10ModalContent" style="max-height:60vh; overflow-y:auto;">
+            <p style="text-align:center; color:#aaa;">Caricamento...</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- MOTORE 2D -->
+<script src="mappe.js?v=1777451034" defer></script>
+
+<!-- UI E TIMER -->
+<script src="mainj.js?v=1777451034" defer></script>
+
+<!-- CRAFTER -->
+<script src="crafter.js?v=1777451034" defer></script>
+
+<!-- ===== OVERRIDE MODAL AUTH ===== -->
+<script>
+/*
+ * NOTA TECNICA — perché DOMContentLoaded:
+ * Lo script inline viene eseguito durante il parsing HTML, PRIMA che i defer
+ * scripts (mainj.js) girino. mainj.js ridefinisce switchAuthModal/eseguiLogin ecc.
+ * con parametri diversi ('login' vs 'login.html') e tenta di accedere a
+ * authModalTitle che non esiste in GIOCO.html, causando un errore silenzioso.
+ * DOMContentLoaded scatta DOPO i defer scripts, quindi le nostre ridefinizioni
+ * sovrascrivono quelle di mainj.js in modo sicuro.
+ */
+
+// ── Toggle password visibility (modale GIOCO.html) ───────────────────────────
+function modalTogglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    const isHidden = inp.type === 'password';
+    inp.type = isHidden ? 'text' : 'password';
+    const svg = btn.querySelector('svg');
+    if (isHidden) {
+        svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+}
+
+// ── Forza password rimane globale perché richiamata da oninput ──────────────
+function modalCheckStrength(val) {
+    const bars  = ['ms1','ms2','ms3','ms4'].map(id => document.getElementById(id));
+    const label = document.getElementById('modalStrengthLabel');
+    if (!bars[0] || !label) return;
+    const colors = ['#ff6b6b','#ff9900','#ffcc00','#00ff88'];
+    const labels = ['DEBOLE','DISCRETA','BUONA','OTTIMA'];
+    let score = 0;
+    if (val.length >= 6)  score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    bars.forEach((b, i) => {
+        b.style.background = i < score ? colors[score - 1] : 'rgba(255,255,255,0.14)';
+    });
+    label.textContent = val.length > 0 ? (labels[score - 1] || '') : '';
+    label.style.color = score > 0 ? colors[score - 1] : 'rgba(255,255,255,0.38)';
+}
+
+// ── PROFILO PANEL ─────────────────────────────────────────────────────────
+const AVATARS_PREDEFINITI = [
+    { emoji:'🏎️', label:'Bolide' },
+    { emoji:'🚀', label:'Razzo' },
+    { emoji:'🦊', label:'Volpe' },
+    { emoji:'🐆', label:'Ghepardo' },
+    { emoji:'🦅', label:'Aquila' },
+    { emoji:'🔥', label:'Fuoco' },
+    { emoji:'⚡', label:'Fulmine' },
+    { emoji:'💀', label:'Teschio' },
+    { emoji:'🤖', label:'Robot' },
+    { emoji:'👾', label:'Alieno' },
+];
+
+let _profiloAperto = false;
+let _avatarCorrente = localStorage.getItem('profileAvatar') || '🏎️';
+let _avatarIsImg = false;
+
+function apriProfilo() {
+    if (_profiloAperto) { chiudiProfilo(); return; }
+    _profiloAperto = true;
+    document.getElementById('profileOverlay').style.display = 'block';
+    document.getElementById('profilePanel').style.right = '0px';
+    popolaAvatarGrid();
+    caricaDatiProfilo();
+}
+
+function chiudiProfilo() {
+    _profiloAperto = false;
+    document.getElementById('profileOverlay').style.display = 'none';
+    document.getElementById('profilePanel').style.right = '-420px';
+}
+
+function popolaAvatarGrid() {
+    const grid = document.getElementById('avatarGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    AVATARS_PREDEFINITI.forEach(av => {
+        const btn = document.createElement('button');
+        btn.style.cssText = `
+            background:rgba(0,119,255,0.04);
+            border:1.5px solid ${_avatarCorrente===av.emoji && !_avatarIsImg ? 'rgba(0,229,255,0.7)' : 'rgba(0,119,255,0.12)'};
+            border-radius:8px;padding:7px 4px;cursor:pointer;
+            font-size:1.5em;line-height:1;text-align:center;
+            transition:all 0.15s;display:flex;flex-direction:column;
+            align-items:center;gap:2px;
+        `;
+        btn.title = av.label;
+        btn.innerHTML = `<span>${av.emoji}</span>`;
+        btn.onclick = () => {
+            _avatarCorrente = av.emoji;
+            _avatarIsImg = false;
+            localStorage.setItem('profileAvatar', av.emoji);
+            localStorage.removeItem('profileAvatarImgData');
+            // Aggiorna UI avatar
+            document.getElementById('profileAvatarEmoji').textContent = av.emoji;
+            document.getElementById('profileAvatarEmoji').style.display = '';
+            const imgEl = document.getElementById('profileAvatarImg');
+            imgEl.style.display = 'none';
+            imgEl.src = '';
+            popolaAvatarGrid();
+            aggiornaNomeBarraAuth();
+        };
+        btn.onmouseover = () => { btn.style.borderColor = '#00e5ff'; btn.style.background = 'rgba(0,119,255,0.1)'; };
+        btn.onmouseout = () => {
+            btn.style.borderColor = (_avatarCorrente===av.emoji && !_avatarIsImg) ? 'rgba(0,229,255,0.7)' : 'rgba(0,119,255,0.12)';
+            btn.style.background = 'rgba(0,119,255,0.04)';
+        };
+        grid.appendChild(btn);
+    });
+}
+
+function caricaAvatarCustom(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const data = e.target.result;
+        _avatarIsImg = true;
+        _avatarCorrente = data;
+        localStorage.setItem('profileAvatarImgData', data);
+        localStorage.removeItem('profileAvatar');
+        const imgEl = document.getElementById('profileAvatarImg');
+        imgEl.src = data;
+        imgEl.style.display = 'block';
+        document.getElementById('profileAvatarEmoji').style.display = 'none';
+        popolaAvatarGrid();
+        aggiornaNomeBarraAuth();
+    };
+    reader.readAsDataURL(file);
+}
+
+function ripristinaAvatarSalvato() {
+    const imgData = localStorage.getItem('profileAvatarImgData');
+    const emojiData = localStorage.getItem('profileAvatar');
+    if (imgData) {
+        _avatarIsImg = true;
+        _avatarCorrente = imgData;
+        const imgEl = document.getElementById('profileAvatarImg');
+        if (imgEl) { imgEl.src = imgData; imgEl.style.display = 'block'; }
+        const emojiEl = document.getElementById('profileAvatarEmoji');
+        if (emojiEl) emojiEl.style.display = 'none';
+    } else if (emojiData) {
+        _avatarIsImg = false;
+        _avatarCorrente = emojiData;
+        const emojiEl = document.getElementById('profileAvatarEmoji');
+        if (emojiEl) { emojiEl.textContent = emojiData; emojiEl.style.display = ''; }
+    }
+}
+
+async function caricaDatiProfilo() {
+    // Nickname ed email dalla sessione
+    try {
+        const res = await fetch('/GiocoF/Session', { credentials: 'include' });
+        const data = await res.json();
+        if (data.loggedIn) {
+            document.getElementById('profileNicknameDisplay').textContent = data.nakName || '—';
+            document.getElementById('profileNicknameInput').value = data.nakName || '';
+        }
+    } catch(e) {}
+
+    // Carica i migliori score per le 3 mappe standard
+    await caricaBestScoresProfilo();
+}
+
+async function caricaBestScoresProfilo() {
+    // Feature #5: usa ScorePersonale per record personali (non dipende dalla top10)
+    // Feature #4: mappe custom isolate — usa credentials per caricare solo le proprie
+    const mappeStandard = [
+        { id: 1, nome: 'MONTAGNA', icona: '⛰️', gradiente: 'rgba(74,144,226,0.15)' },
+        { id: 2, nome: 'CITTÀ',    icona: '🏙️', gradiente: 'rgba(226,74,74,0.15)' },
+        { id: 3, nome: 'FORESTA',  icona: '🌲', gradiente: 'rgba(226,181,74,0.15)' },
+    ];
+    const container = document.getElementById('profileBestScores');
+    container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.25);font-size:0.8em;padding:12px;">Caricamento...</div>';
+
+    const nakName = sessionStorage.getItem('nakName') || '';
+    let gareTotali = 0;
+    let mappeConRecord = 0;
+    const vociProfilo = [];
+
+    // Feature #5: mappe standard — usa ScorePersonale per record personale affidabile
+    for (const mappa of mappeStandard) {
+        try {
+            // ScorePersonale restituisce il record dell'utente autenticato dalla sessione
+            const res = await fetch('/GiocoF/ScorePersonale?idCircuito=' + mappa.id, { credentials: 'include' });
+            const data = await res.json();
+            const mioRecord = (data.ok && data.tempoMs !== null)
+                ? { tempoFormattato: data.tempoFormattato, tempoMs: data.tempoMs }
+                : null;
+            if (mioRecord) { mappeConRecord++; gareTotali++; }
+            // Posizione nella top10
+            let miaPos = null;
+            try {
+                const resTop = await fetch('/GiocoF/TopScore?idCircuito=' + mappa.id);
+                const top = await resTop.json();
+                const idx = top.findIndex(r => r.nakName === nakName);
+                if (idx >= 0) miaPos = idx + 1;
+            } catch(e) {}
+            vociProfilo.push({ ...mappa, mioRecord, miaPos, tipo: 'standard' });
+        } catch(e) {
+            vociProfilo.push({ ...mappa, mioRecord: null, miaPos: null, tipo: 'standard', errore: true });
+        }
+    }
+
+    // Feature #4 & #5: mappe custom — usa credentials (solo le proprie, isolate dalle standard)
+    try {
+        const resMappe = await fetch('/GiocoF/CaricaMappePersonalizzate', { credentials: 'include' });
+        const mappeCustom = await resMappe.json();
+        if (Array.isArray(mappeCustom)) {
+            for (const mc of mappeCustom) {
+                try {
+                    // Feature #4: ogni mappa custom ha il proprio record separato
+                    const res = await fetch('/GiocoF/ScorePersonale?idCircuito=' + mc.id + '&customMap=true', { credentials: 'include' });
+                    const data = await res.json();
+                    const mioRecord = (data.ok && data.tempoMs !== null)
+                        ? { tempoFormattato: data.tempoFormattato }
+                        : null;
+                    if (mioRecord) { mappeConRecord++; gareTotali++; }
+                    let miaPos = null;
+                    try {
+                        const resTop = await fetch('/GiocoF/TopScore?idCircuito=' + mc.id + '&customMap=true');
+                        const top = await resTop.json();
+                        const idx = top.findIndex(r => r.nakName === nakName);
+                        if (idx >= 0) miaPos = idx + 1;
+                    } catch(e) {}
+                    vociProfilo.push({
+                        id: mc.id, nome: mc.nome, icona: '🛠️',
+                        gradiente: 'rgba(155,89,182,0.15)',
+                        mioRecord, miaPos, tipo: 'custom'
+                    });
+                } catch(e) {
+                    vociProfilo.push({ id: mc.id, nome: mc.nome, icona: '🛠️', gradiente: 'rgba(155,89,182,0.15)', mioRecord: null, miaPos: null, tipo: 'custom' });
+                }
+            }
+        }
+    } catch(e) {}
+
+    // ── Render ──
+    container.innerHTML = '';
+    for (const v of vociProfilo) {
+        const div = document.createElement('div');
+        div.style.cssText = `padding:11px 13px;background:${v.gradiente};border:1px solid ${v.mioRecord ? 'rgba(0,119,255,0.2)' : 'rgba(255,255,255,0.06)'};border-radius:8px;display:flex;align-items:center;gap:12px;margin-bottom:6px;`;
+        div.innerHTML = `
+            <span style="font-size:1.4em;">${v.icona}</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron',monospace;font-size:0.6em;letter-spacing:1.5px;color:rgba(255,255,255,0.4);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${v.nome}${v.tipo==='custom' ? ' <span style="color:rgba(155,89,182,0.7);font-size:0.85em;">· Custom</span>' : ''}</div>
+                ${v.errore ? `<div style="font-size:0.75em;color:rgba(255,100,100,0.5);">Errore</div>`
+                : v.mioRecord
+                    ? `<div style="font-family:'Orbitron',monospace;font-size:0.9em;font-weight:700;color:#00e5ff;letter-spacing:1px;margin-top:3px;">${v.mioRecord.tempoFormattato}</div>`
+                    : `<div style="font-size:0.78em;color:rgba(255,255,255,0.22);margin-top:3px;font-style:italic;">Nessun record</div>`}
+            </div>
+            ${v.miaPos ? `<div style="text-align:center;flex-shrink:0;"><div style="font-family:'Orbitron',monospace;font-size:1em;font-weight:900;color:#ffd700;">#${v.miaPos}</div><div style="font-size:0.58em;color:rgba(255,215,0,0.45);letter-spacing:1px;">TOP 10</div></div>` : ''}
+        `;
+        container.appendChild(div);
+    }
+
+    if (vociProfilo.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.25);font-size:0.8em;padding:20px;">Nessuna mappa disponibile</div>';
+    }
+
+    // Feature #5: leggi contatori locali (incrementati da mappe.js a fine gara)
+    const nakName_stat = sessionStorage.getItem('nakName') || 'guest';
+    const gareTotaliLocale   = parseInt(localStorage.getItem('gare_totali_' + nakName_stat) || '0');
+    const mappeUnicheLocale  = parseInt(localStorage.getItem('mappe_uniche_' + nakName_stat) || '0');
+
+    // Mostra le stats già subito (anche mentre carica gli score)
+    document.getElementById('statGareTotali').textContent   = gareTotaliLocale > 0 ? gareTotaliLocale : '—';
+    document.getElementById('statMappeGiocate').textContent = mappeConRecord > 0 ? mappeConRecord : mappeUnicheLocale > 0 ? mappeUnicheLocale : '—';
+}
+
+function abilitaModificaNickname() {
+    document.getElementById('profileNicknameWrap').style.display = 'none';
+    document.getElementById('profileNicknameEdit').style.display = 'block';
+    document.getElementById('profileNicknameMsg').textContent = '';
+    setTimeout(() => document.getElementById('profileNicknameInput').focus(), 50);
+}
+
+function annullaNickname() {
+    document.getElementById('profileNicknameWrap').style.display = 'block';
+    document.getElementById('profileNicknameEdit').style.display = 'none';
+}
+
+async function salvaNickname() {
+    const nuovoNome = document.getElementById('profileNicknameInput').value.trim();
+    const msgEl = document.getElementById('profileNicknameMsg');
+    if (!nuovoNome) { msgEl.textContent = 'Inserisci un nickname'; return; }
+    if (nuovoNome.length < 2) { msgEl.textContent = 'Minimo 2 caratteri'; return; }
+
+    msgEl.style.color = 'rgba(0,200,255,0.8)';
+    msgEl.textContent = 'Salvataggio...';
+
+    try {
+        const res = await fetch('/GiocoF/CambiaNickname', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'nakName=' + encodeURIComponent(nuovoNome)
+        });
+        const data = await res.json();
+        if (data.ok) {
+            sessionStorage.setItem('nakName', nuovoNome);
+            document.getElementById('profileNicknameDisplay').textContent = nuovoNome;
+            aggiornaNomeBarraAuth();
+            annullaNickname();
+            msgEl.style.color = '#00ff88';
+            msgEl.textContent = '✓ Nickname aggiornato!';
+        } else {
+            msgEl.style.color = '#ff6b6b';
+            msgEl.textContent = data.errore || 'Errore aggiornamento';
+            document.getElementById('profileNicknameEdit').style.display = 'block';
+            document.getElementById('profileNicknameWrap').style.display = 'none';
+        }
+    } catch(e) {
+        msgEl.style.color = '#ff6b6b';
+        msgEl.textContent = 'Errore di connessione';
+    }
+}
+
+function aggiornaNomeBarraAuth() {
+    const nakName = sessionStorage.getItem('nakName') || '';
+    const nomeEl = document.getElementById('authNome');
+    if (!nomeEl) return;
+    const imgData = localStorage.getItem('profileAvatarImgData');
+    const emoji = localStorage.getItem('profileAvatar') || '🏎️';
+    if (imgData) {
+        nomeEl.innerHTML = `<img src="${imgData}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;margin-right:6px;border:1px solid rgba(0,180,255,0.4);vertical-align:middle;"> ${nakName}`;
+    } else {
+        nomeEl.innerHTML = `<span style="margin-right:4px;">${emoji}</span> ${nakName}`;
+    }
+}
+
+// Inizializza avatar salvato all'avvio + ridefinisce funzioni auth DOPO mainj.js
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ── Avatar ────────────────────────────────────────────────────────────────
+    ripristinaAvatarSalvato();
+
+    // ── Funzioni auth: ridefinite QUI perché DOMContentLoaded scatta dopo
+    //    i defer scripts, quindi sovrascriviamo correttamente mainj.js ──────────
+
+    window.switchAuthModal = function(tipo) {
+        const loginForm = document.getElementById('authLoginForm');
+        const regForm   = document.getElementById('authRegisterForm');
+        if (!loginForm || !regForm) return;
+        const isLogin    = tipo === 'login'    || tipo === 'login.html';
+        const isRegister = tipo === 'register' || tipo === 'register.html';
+        loginForm.style.display = isLogin    ? 'block' : 'none';
+        regForm.style.display   = isRegister ? 'block' : 'none';
+        ['authErrore','regErrore','regSuccesso'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '';
+        });
+        const lb = document.getElementById('authLoginBtn2');
+        const rb = document.getElementById('authRegBtn2');
+        if (lb) { lb.textContent = 'ENTRA NEL GIOCO \u279c'; lb.disabled = false; }
+        if (rb) { rb.textContent = 'CREA ACCOUNT \u279c';    rb.disabled = false; }
+    };
+
+    // Feature #1 & #2: apriAuthModal accetta redirectAction opzionale
+    window.apriAuthModal = function(tipo, redirectAction) {
+        const modal = document.getElementById('authModal');
+        if (!modal) return;
+        // Salva azione di redirect se fornita (Feature #1)
+        if (redirectAction && typeof salvaRedirectAction === 'function') {
+            salvaRedirectAction(redirectAction);
+        }
+        modal.classList.add('open');
+        window.switchAuthModal(tipo);
+    };
+
+    window.chiudiAuthModal = function() {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.classList.remove('open');
+    };
+
+    // Feature #1 & #8: dopo login salva punteggio pendente e fa redirect
+    window.eseguiLogin = async function() {
+        const email    = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value.trim();
+        const errEl    = document.getElementById('authErrore');
+        const btn      = document.getElementById('authLoginBtn2');
+        if (!email || !password) { errEl.textContent = 'Inserisci email e password.'; return; }
+        errEl.textContent = '';
+        btn.textContent = 'ACCESSO IN CORSO...';
+        btn.disabled = true;
+        try {
+            const res  = await fetch('/GiocoF/Login', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password)
+            });
+            const data = await res.json();
+            if (data.ok) {
+                btn.textContent = '\u2713 ACCESSO EFFETTUATO';
+                sessionStorage.setItem('nakName', data.nakName);
+                if (typeof aggiornaAuthBar === 'function') aggiornaAuthBar(true, data.nakName);
+                // Feature #8: salva punteggio pendente se presente
+                if (typeof salvaPunteggioPendente === 'function') await salvaPunteggioPendente();
+                // Feature #1: esegui redirect post-auth
+                setTimeout(() => {
+                    if (typeof eseguiRedirectPostAuth === 'function') eseguiRedirectPostAuth();
+                    else window.chiudiAuthModal();
+                }, 900);
+            } else {
+                errEl.textContent = data.errore || 'Email o password errati.';
+                btn.textContent = 'ENTRA NEL GIOCO \u279c';
+                btn.disabled = false;
+            }
+        } catch(e) {
+            errEl.textContent = 'Errore di connessione al server.';
+            btn.textContent = 'ENTRA NEL GIOCO \u279c';
+            btn.disabled = false;
+        }
+    };
+
+    // Feature #1 & #8: dopo registrazione salva punteggio pendente e fa redirect
+    window.eseguiRegistrazione = async function() {
+        const nome      = document.getElementById('regNome').value.trim();
+        const email     = document.getElementById('regEmail').value.trim();
+        const password  = document.getElementById('regPassword').value.trim();
+        const pass2     = document.getElementById('regPassword2').value.trim();
+        const domanda1  = document.getElementById('regDomanda1') ? document.getElementById('regDomanda1').value : '';
+        const risposta1 = document.getElementById('regRisposta1') ? document.getElementById('regRisposta1').value.trim() : '';
+        const domanda2  = document.getElementById('regDomanda2') ? document.getElementById('regDomanda2').value : '';
+        const risposta2 = document.getElementById('regRisposta2') ? document.getElementById('regRisposta2').value.trim() : '';
+        const errEl     = document.getElementById('regErrore');
+        const okEl      = document.getElementById('regSuccesso');
+        const btn       = document.getElementById('authRegBtn2');
+        errEl.textContent = ''; okEl.textContent = '';
+
+        if (!nome || !email || !password || !pass2) { errEl.textContent = 'Tutti i campi sono obbligatori.'; return; }
+        if (password.length < 6)  { errEl.textContent = 'La password deve essere di almeno 6 caratteri.'; return; }
+        if (password !== pass2)   { errEl.textContent = 'Le password non coincidono.'; return; }
+
+        // Validazione domande di sicurezza (opzionali ma se compilate devono essere complete)
+        const haDomanda1 = domanda1 && risposta1;
+        const haDomanda2 = domanda2 && risposta2;
+        if ((haDomanda1 && !haDomanda2) || (!haDomanda1 && haDomanda2)) {
+            errEl.textContent = 'Compila entrambe le domande di sicurezza (o lascia entrambe vuote).'; return;
+        }
+        if (haDomanda1 && risposta1.includes(' ')) { errEl.textContent = 'La risposta alla prima domanda deve essere una sola parola.'; return; }
+        if (haDomanda2 && risposta2.includes(' ')) { errEl.textContent = 'La risposta alla seconda domanda deve essere una sola parola.'; return; }
+        if (haDomanda1 && haDomanda2 && domanda1 === domanda2) { errEl.textContent = 'Scegli due domande diverse.'; return; }
+
+        btn.textContent = 'CREAZIONE IN CORSO...';
+        btn.disabled = true;
+        try {
+            const params = new URLSearchParams();
+            params.append('nak_name', nome);
+            params.append('email', email);
+            params.append('password', password);
+            if (haDomanda1 && haDomanda2) {
+                params.append('domanda1', domanda1);
+                params.append('risposta1', risposta1);
+                params.append('domanda2', domanda2);
+                params.append('risposta2', risposta2);
+            }
+            const res  = await fetch('/GiocoF/Register', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            });
+            const data = await res.json();
+            if (data.ok) {
+                okEl.textContent = '\u2713 Account creato! Bentornato in pista!';
+                btn.textContent  = '\u2713 FATTO!';
+                sessionStorage.setItem('nakName', nome);
+                if (typeof aggiornaAuthBar === 'function') aggiornaAuthBar(true, nome);
+                // Feature #8: salva punteggio pendente se presente
+                if (typeof salvaPunteggioPendente === 'function') await salvaPunteggioPendente();
+                // Feature #1: esegui redirect post-auth
+                setTimeout(() => {
+                    if (typeof eseguiRedirectPostAuth === 'function') eseguiRedirectPostAuth();
+                    else window.chiudiAuthModal();
+                }, 1100);
+            } else {
+                errEl.textContent = data.errore || 'Errore durante la registrazione.';
+                btn.textContent = 'CREA ACCOUNT \u279c';
+                btn.disabled = false;
+            }
+        } catch(e) {
+            errEl.textContent = 'Errore di connessione al server.';
+            btn.textContent = 'CREA ACCOUNT \u279c';
+            btn.disabled = false;
+        }
+    };
+
+    // ── Google OAuth ───────────────────────────────────────────────────────────
+    window.gooogleLogin = function() {
+        const currentPage = window.location.pathname.split('/').pop() || 'GIOCO.html';
+        window.location.href = '/GiocoF/GoogleLogin?redirect=' + encodeURIComponent(currentPage);
+    };
+
+    // ── Override aggiornaAuthBar: aggiunge avatar + profilo (GIOCO.html specific) ──
+    // mainj.js già gestisce la logica base; qui aggiungiamo avatar e onclick profilo
+    const _origAggiornaAuthBar_gioco = window.aggiornaAuthBar;
+    window.aggiornaAuthBar = function(loggedIn, nakName) {
+        if (_origAggiornaAuthBar_gioco) _origAggiornaAuthBar_gioco(loggedIn, nakName);
+        if (loggedIn) {
+            // Aggiorna nome con avatar
+            setTimeout(aggiornaNomeBarraAuth, 50);
+            const nomeEl = document.getElementById('authNome');
+            if (nomeEl) {
+                nomeEl.style.cursor = 'pointer';
+                nomeEl.title = 'Visualizza profilo';
+                nomeEl.onclick = apriProfilo;
+            }
+        } else {
+            const nomeEl = document.getElementById('authNome');
+            if (nomeEl) { nomeEl.onclick = null; nomeEl.style.cursor = 'default'; }
+        }
+        // aggiornaVisibilitaAuthBar già chiamato da mainj.js
+    };
+
+    // ── Forza password rimane globale ─────────────────────────────────────────
+    window.modalCheckStrength = window.modalCheckStrength || function(val) {
+        const bars  = ['ms1','ms2','ms3','ms4'].map(id => document.getElementById(id));
+        const label = document.getElementById('modalStrengthLabel');
+        if (!bars[0] || !label) return;
+        const colors = ['#ff6b6b','#ff9900','#ffcc00','#00ff88'];
+        const labels = ['DEBOLE','DISCRETA','BUONA','OTTIMA'];
+        let score = 0;
+        if (val.length >= 6)  score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        bars.forEach((b, i) => { b.style.background = i < score ? colors[score - 1] : 'rgba(255,255,255,0.14)'; });
+        label.textContent = val.length > 0 ? (labels[score - 1] || '') : '';
+        label.style.color = score > 0 ? colors[score - 1] : 'rgba(255,255,255,0.38)';
+    };
+});
+
+</script>
+
+</body>
+</html>
