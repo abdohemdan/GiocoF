@@ -3,9 +3,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/db_gioco?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    private static final String USER = "root";
-    private static final String PASS = "";
+    private static final String URL = "jdbc:mysql://sql7.freesqldatabase.com:3306/sql7825099?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+private static final String USER = "sql7825099";
+private static final String PASS = "Hx9L9lBB7X";
     
     public static Connection getConnection() throws SQLException {
         try {
