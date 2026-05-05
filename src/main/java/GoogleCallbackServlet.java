@@ -25,8 +25,7 @@ public class GoogleCallbackServlet extends HttpServlet {
 
     private static final String CLIENT_ID = "288750040588-hsq2eth0pdue8atftbds0ri20gb6fa95.apps.googleusercontent.com";
     private static final String CLIENT_SECRET = "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";
-    private static final String REDIRECT_URI = "http://localhost:8080/GiocoF/GoogleCallback";
-
+    private static final String REDIRECT_URI = "https://supergiuliokart.onrender.com/GoogleCallback";
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
