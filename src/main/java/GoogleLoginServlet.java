@@ -7,7 +7,7 @@ import jakarta.servlet.http.*;
 public class GoogleLoginServlet extends HttpServlet {
 
     private static final String CLIENT_ID     = "288750040588-hsq2eth0pdue8atftbds0ri20gb6fa95.apps.googleusercontent.com";
-    private static final String REDIRECT_URI  = "http://https://supergiuliokart.onrender.com/GoogleCallback";
+    private static final String REDIRECT_URI  = "https://supergiuliokart.onrender.com/GoogleCallback";
     private static final String SCOPE         = "openid email profile";
 
     @Override
