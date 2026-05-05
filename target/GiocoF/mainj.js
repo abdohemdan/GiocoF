@@ -106,7 +106,7 @@ async function _inviaScoreAlServer(idCircuito, tempoMs, customMapOverride) {
             ? customMapOverride
             : !!(window.isCustomMap && window.customMapDbId);
         if (customMap) params.append('customMap', 'true');
-        const res = await fetch('/Score', {
+        const res = await fetch('/GiocoF/Score', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -185,7 +185,7 @@ async function aggiornaPosizioneFinale(idCircuito) {
     try {
         const nakName = sessionStorage.getItem('nakName') || '';
         const customMap = window.isCustomMap && window.customMapDbId && String(idCircuito) === String(window.customMapDbId);
-        const res = await fetch('/TopScore?idCircuito=' + idCircuito + (customMap ? '&customMap=true' : ''));
+        const res = await fetch('/GiocoF/TopScore?idCircuito=' + idCircuito + (customMap ? '&customMap=true' : ''));
         const classifica = await res.json();
         const posMsg = document.getElementById('posizionamentoMessage');
         if (!posMsg || !classifica || !classifica.length) return;
@@ -205,7 +205,7 @@ async function caricaTop10(idCircuito, divId) {
     const container = document.getElementById(divId);
     if (!container) return;
     try {
-        const res = await fetch('/TopScore?idCircuito=' + idCircuito);
+        const res = await fetch('/GiocoF/TopScore?idCircuito=' + idCircuito);
         const data = await res.json();
         if (!data || data.length === 0) {
             container.innerHTML = '<h4>🏆 TOP 10</h4><p class="nessuno">Nessun record ancora!</p>';
@@ -243,7 +243,7 @@ function mostraTop10MappaDB(mappaDbId, mappaNome) {
 
 async function caricaTop10MappaDB(mappaDbId, containerElement) {
     try {
-        const res = await fetch('/TopScore?idCircuito=' + mappaDbId + '&customMap=true');
+        const res = await fetch('/GiocoF/TopScore?idCircuito=' + mappaDbId + '&customMap=true');
         const data = await res.json();
         if (!data || data.length === 0) {
             containerElement.innerHTML = '<p style="text-align:center;color:#aaa;">Nessun record ancora!</p>';
@@ -285,7 +285,7 @@ function chiudiTop10Modal() {
 
 async function caricaTop10PerModal(idCircuito, containerElement, customMap) {
     try {
-        const res = await fetch('/TopScore?idCircuito=' + idCircuito + (customMap ? '&customMap=true' : ''), { credentials: 'include' });
+        const res = await fetch('/GiocoF/TopScore?idCircuito=' + idCircuito + (customMap ? '&customMap=true' : ''), { credentials: 'include' });
         const data = await res.json();
         if (!data || data.length === 0) {
             containerElement.innerHTML = '<p style="text-align:center;color:#aaa;">Nessun record ancora!</p>';
@@ -471,7 +471,7 @@ async function eseguiLogin() {
     if (!email || !password) { errEl.textContent = 'Inserisci email e password'; return; }
     errEl.textContent = '';
     try {
-        const res  = await fetch('/Login', {
+        const res  = await fetch('/GiocoF/Login', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password)
@@ -521,7 +521,7 @@ async function eseguiRegistrazione() {
             params.append('domanda2', domanda2);
             params.append('risposta2', risposta2);
         }
-        const res  = await fetch('/Register', {
+        const res  = await fetch('/GiocoF/Register', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params.toString()
@@ -552,7 +552,7 @@ async function eseguiLogout() {
         if (window.CrafterAPI) window.CrafterAPI.hide();
     }
 
-    await fetch('/Logout', { method: 'POST', credentials: 'include' });
+    await fetch('/GiocoF/Logout', { method: 'POST', credentials: 'include' });
     sessionStorage.removeItem('nakName');
     window._utenteLoggato = false;
     window._pendingScore = null;
@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Controlla se bisogna ripristinare lo stato del gioco dopo il redirect Google OAuth
     const _needRestoreGame = !!sessionStorage.getItem('_googleRedirectRestoreGame');
 
-    fetch('/Session', { credentials: 'include' })
+    fetch('/GiocoF/Session', { credentials: 'include' })
         .then(r => r.json())
         .then(async data => {
             if (data.loggedIn) {
@@ -1182,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!email||!password){errEl.textContent='Inserisci email e password.';return;}
         errEl.textContent='';btn.textContent='ACCESSO IN CORSO...';btn.disabled=true;
         try{
-            const res=await fetch('/Login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'email='+encodeURIComponent(email)+'&password='+encodeURIComponent(password)});
+            const res=await fetch('/GiocoF/Login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'email='+encodeURIComponent(email)+'&password='+encodeURIComponent(password)});
             const data=await res.json();
             if(data.ok){
                 btn.textContent='\u2713 ACCESSO EFFETTUATO';
@@ -1233,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 params.append('domanda2', domanda2);
                 params.append('risposta2', risposta2);
             }
-            const res  = await fetch('/Register', {
+            const res  = await fetch('/GiocoF/Register', {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString()
@@ -1286,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('_googleRedirectRestoreScreen', 'crafter');
         }
         const currentPage = window.location.pathname.split('/').pop() || 'GIOCO.html';
-        window.location.href = '/GoogleLogin?redirect=' + encodeURIComponent(currentPage);
+        window.location.href = '/GiocoF/GoogleLogin?redirect=' + encodeURIComponent(currentPage);
     };
 
     // Forza password — rimane globale

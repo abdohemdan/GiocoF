@@ -12,7 +12,7 @@ import java.sql.*;
  * Restituisce il miglior score personale dell'utente loggato
  * per un circuito specifico.
  *
- * GET /ScorePersonale?idCircuito=5
+ * GET /GiocoF/ScorePersonale?idCircuito=5
  *
  * Risposta successo (record trovato):
  *   {"ok":true, "tempoMs":85432, "tempoFormattato":"01:25.432"}

@@ -25,7 +25,7 @@ public class GoogleCallbackServlet extends HttpServlet {
 
     private static final String CLIENT_ID = "288750040588-hsq2eth0pdue8atftbds0ri20gb6fa95.apps.googleusercontent.com";
     private static final String CLIENT_SECRET = "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";
-    private static final String REDIRECT_URI = "http://localhost:8080/GoogleCallback";
+    private static final String REDIRECT_URI = "http://localhost:8080/GiocoF/GoogleCallback";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -109,7 +109,7 @@ public class GoogleCallbackServlet extends HttpServlet {
                 try {
                     String decoded = java.net.URLDecoder.decode(state, "UTF-8");
                     // Sicurezza: accetta solo URL relativi al sito (no http/https esterni, no path traversal)
-                    // Ammette: nomefile.html, nomefile.html?param=valore&altro=123, /pagina.html?...
+                    // Ammette: nomefile.html, nomefile.html?param=valore&altro=123, /GiocoF/pagina.html?...
                     boolean isSafe = !decoded.contains("..") 
                         && !decoded.toLowerCase().startsWith("http")
                         && !decoded.toLowerCase().startsWith("//")
