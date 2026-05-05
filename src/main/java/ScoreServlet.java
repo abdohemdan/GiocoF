@@ -7,15 +7,15 @@ import java.io.IOException;
 
 /**
  * Stub di compatibilità — delega a SalvaScoreServlet (/Score).
- * Esiste solo per non rompere eventuali chiamate legacy a /GiocoF/Score.
- * Il path attivo usato dal frontend è /GiocoF/Score (mappato su questo servlet)
- * oppure /GiocoF/Score -> SalvaScoreServlet a seconda del deployment.
+ * Esiste solo per non rompere eventuali chiamate legacy a /Score.
+ * Il path attivo usato dal frontend è /Score (mappato su questo servlet)
+ * oppure /Score -> SalvaScoreServlet a seconda del deployment.
  *
  * NOTA: nel web.xml o tramite annotation, uno dei due deve vincere.
  * Soluzione adottata: questo servlet fa forward interno a /Score
  * così tutta la logica rimane in SalvaScoreServlet.
  */
-@WebServlet("/GiocoF/Score")
+@WebServlet("/Score")
 public class ScoreServlet extends HttpServlet {
 
     @Override

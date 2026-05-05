@@ -1241,7 +1241,7 @@ function ripristinaAvatarSalvato() {
 async function caricaDatiProfilo() {
     // Nickname ed email dalla sessione
     try {
-        const res = await fetch('/GiocoF/Session', { credentials: 'include' });
+        const res = await fetch('/Session', { credentials: 'include' });
         const data = await res.json();
         if (data.loggedIn) {
             document.getElementById('profileNicknameDisplay').textContent = data.nakName || '—';
@@ -1273,7 +1273,7 @@ async function caricaBestScoresProfilo() {
     for (const mappa of mappeStandard) {
         try {
             // ScorePersonale restituisce il record dell'utente autenticato dalla sessione
-            const res = await fetch('/GiocoF/ScorePersonale?idCircuito=' + mappa.id, { credentials: 'include' });
+            const res = await fetch('/ScorePersonale?idCircuito=' + mappa.id, { credentials: 'include' });
             const data = await res.json();
             const mioRecord = (data.ok && data.tempoMs !== null)
                 ? { tempoFormattato: data.tempoFormattato, tempoMs: data.tempoMs }
@@ -1282,7 +1282,7 @@ async function caricaBestScoresProfilo() {
             // Posizione nella top10
             let miaPos = null;
             try {
-                const resTop = await fetch('/GiocoF/TopScore?idCircuito=' + mappa.id);
+                const resTop = await fetch('/TopScore?idCircuito=' + mappa.id);
                 const top = await resTop.json();
                 const idx = top.findIndex(r => r.nakName === nakName);
                 if (idx >= 0) miaPos = idx + 1;
@@ -1295,13 +1295,13 @@ async function caricaBestScoresProfilo() {
 
     // Feature #4 & #5: mappe custom — usa credentials (solo le proprie, isolate dalle standard)
     try {
-        const resMappe = await fetch('/GiocoF/CaricaMappePersonalizzate', { credentials: 'include' });
+        const resMappe = await fetch('/CaricaMappePersonalizzate', { credentials: 'include' });
         const mappeCustom = await resMappe.json();
         if (Array.isArray(mappeCustom)) {
             for (const mc of mappeCustom) {
                 try {
                     // Feature #4: ogni mappa custom ha il proprio record separato
-                    const res = await fetch('/GiocoF/ScorePersonale?idCircuito=' + mc.id + '&customMap=true', { credentials: 'include' });
+                    const res = await fetch('/ScorePersonale?idCircuito=' + mc.id + '&customMap=true', { credentials: 'include' });
                     const data = await res.json();
                     const mioRecord = (data.ok && data.tempoMs !== null)
                         ? { tempoFormattato: data.tempoFormattato }
@@ -1309,7 +1309,7 @@ async function caricaBestScoresProfilo() {
                     if (mioRecord) { mappeConRecord++; gareTotali++; }
                     let miaPos = null;
                     try {
-                        const resTop = await fetch('/GiocoF/TopScore?idCircuito=' + mc.id + '&customMap=true');
+                        const resTop = await fetch('/TopScore?idCircuito=' + mc.id + '&customMap=true');
                         const top = await resTop.json();
                         const idx = top.findIndex(r => r.nakName === nakName);
                         if (idx >= 0) miaPos = idx + 1;
@@ -1381,7 +1381,7 @@ async function salvaNickname() {
     msgEl.textContent = 'Salvataggio...';
 
     try {
-        const res = await fetch('/GiocoF/CambiaNickname', {
+        const res = await fetch('/CambiaNickname', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'nakName=' + encodeURIComponent(nuovoNome)
@@ -1474,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'ACCESSO IN CORSO...';
         btn.disabled = true;
         try {
-            const res  = await fetch('/GiocoF/Login', {
+            const res  = await fetch('/Login', {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password)
@@ -1545,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 params.append('domanda2', domanda2);
                 params.append('risposta2', risposta2);
             }
-            const res  = await fetch('/GiocoF/Register', {
+            const res  = await fetch('/Register', {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString()
@@ -1578,7 +1578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Google OAuth ───────────────────────────────────────────────────────────
     window.gooogleLogin = function() {
         const currentPage = window.location.pathname.split('/').pop() || 'GIOCO.html';
-        window.location.href = '/GiocoF/GoogleLogin?redirect=' + encodeURIComponent(currentPage);
+        window.location.href = '/GoogleLogin?redirect=' + encodeURIComponent(currentPage);
     };
 
     // ── Override aggiornaAuthBar: aggiunge avatar + profilo (GIOCO.html specific) ──

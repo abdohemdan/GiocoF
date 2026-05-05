@@ -10,7 +10,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
  * Verifica le risposte alle domande di sicurezza e, se corrette,
  * aggiorna la password dell'utente.
  *
- * POST /GiocoF/ResetPassword
+ * POST /ResetPassword
  *   Parametri:
  *     email        — email dell'account
  *     risposta1    — risposta alla prima domanda (una parola)

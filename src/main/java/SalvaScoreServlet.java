@@ -10,10 +10,10 @@ import java.sql.SQLException;
 
 /**
  * Salva o aggiorna il miglior tempo di un utente per un circuito.
- * Rimpiazza sia SalvaScoreServlet (/Score) che ScoreServlet (/GiocoF/Score),
+ * Rimpiazza sia SalvaScoreServlet (/Score) che ScoreServlet (/Score),
  * eliminando la duplicazione. Usa ScoreDAO per la logica di persistenza.
  *
- * POST /GiocoF/Score
+ * POST /Score
  *   Parametri: idCircuito (int), tempoMs (long)
  *   Sessione:  userId (obbligatorio)
  */

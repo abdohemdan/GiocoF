@@ -9,7 +9,7 @@ import jakarta.servlet.http.*;
  * Restituisce le domande di sicurezza associate a un'email.
  * Usato dal flusso "Dimentica password" per mostrare le domande all'utente.
  *
- * GET /GiocoF/GetDomandeSicurezza?email=xxx
+ * GET /GetDomandeSicurezza?email=xxx
  *
  * Risposta se trovato:
  *   {"ok":true, "domanda1":"...", "domanda2":"..."}

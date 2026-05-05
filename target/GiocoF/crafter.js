@@ -2749,7 +2749,7 @@ async function saveCircuit(silent){
     // e altri campi non serializzabili che corrompono il JSON nel DB.
     params.append('mapData', JSON.stringify(data));
     if (window.customMapDbId) params.append('mapId', window.customMapDbId);
-    const res = await fetch('/GiocoF/SalvaMappaPersonalizzata', {
+    const res = await fetch('/SalvaMappaPersonalizzata', {
       method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
     });
     const dbData = await res.json();
@@ -2899,7 +2899,7 @@ async function playCircuit(){
       // Usa formato pulito (stesso di saveCircuit) — NON {…S} che include HTMLImageElement
       const cleanData = {name:S.name,mappa:S.mappa,rawPath:S.rawPath,smoothPath:S.smoothPath,obstacles:S.obstacles,scenery:S.scenery,colAsfalto:S.colAsfalto,colBordo:S.colBordo,colErba:S.colErba,roadW:S.roadW,opponents:S.opponents};
       params.append('mapData', JSON.stringify(cleanData));
-      const res = await fetch('/GiocoF/SalvaMappaPersonalizzata', {
+      const res = await fetch('/SalvaMappaPersonalizzata', {
         method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
       });
       const data = await res.json();
@@ -3030,7 +3030,7 @@ function patchObstacleSet(sprites){
 async function show(){
   // Feature #2: Verifica sessione — solo utenti autenticati possono usare il Crafter
   try {
-    const res = await fetch('/GiocoF/Session', { credentials: 'include' });
+    const res = await fetch('/Session', { credentials: 'include' });
     const session = await res.json();
     if (!session.loggedIn) {
       // Feature #2: mostra modal login con redirect automatico al Crafter dopo auth
@@ -3093,7 +3093,7 @@ async function saveMapToDatabase() {
         const params = new URLSearchParams();
         params.append('nome', mapName);
         params.append('mapData', JSON.stringify(cleanData));
-        const res = await fetch('/GiocoF/SalvaMappaPersonalizzata', {
+        const res = await fetch('/SalvaMappaPersonalizzata', {
             method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
         });
         const data = await res.json();
@@ -3108,7 +3108,7 @@ async function loadSavedMapsFromDatabase() {
     const userId = window._utenteLoggato ? true : null; // usa sessione server-side
     if (!userId) return;
     try {
-        const res = await fetch('/GiocoF/CaricaMappePersonalizzate', { credentials: 'include' });
+        const res = await fetch('/CaricaMappePersonalizzate', { credentials: 'include' });
         const mappe = await res.json();
         const list = document.getElementById("gkDbList");
         if (!list) return;
@@ -3121,7 +3121,7 @@ async function loadSavedMapsFromDatabase() {
         // Recupera il record PERSONALE dell'utente per ogni mappa
         // tramite ScorePersonale (non usa la top-10, quindi appare sempre)
         const scorePromises = mappe.map(mappa =>
-            fetch('/GiocoF/ScorePersonale?idCircuito=' + mappa.id + '&customMap=true', { credentials: 'include' })
+            fetch('/ScorePersonale?idCircuito=' + mappa.id + '&customMap=true', { credentials: 'include' })
                 .then(r => r.json())
                 .then(data => ({
                     mapId: mappa.id,
@@ -3168,7 +3168,7 @@ async function loadSavedMapsFromDatabase() {
 async function playDatabaseMap(mapId, mapName) {
     const userId = window._utenteLoggato ? true : null; // usa sessione server-side
     try {
-        const res = await fetch('/GiocoF/CaricaMappePersonalizzate', { credentials: 'include' });
+        const res = await fetch('/CaricaMappePersonalizzate', { credentials: 'include' });
         const mappe = await res.json();
         const mappa = mappe.find(m => m.id === mapId);
         if (!mappa) { alert('❌ Mappa non trovata!'); return; }
@@ -3296,7 +3296,7 @@ async function deleteDatabaseMap(mapId) {
     try {
         const params = new URLSearchParams();
         params.append('mapId', mapId);
-        const res = await fetch('/GiocoF/EliminaMappaPersonalizzata', {
+        const res = await fetch('/EliminaMappaPersonalizzata', {
             method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
         });
         const data = await res.json();

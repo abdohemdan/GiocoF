@@ -385,7 +385,7 @@ class PlayerCar {
                     try {
                         const nakName = sessionStorage.getItem('nakName') || '';
                         const isCustomCircuito = window.isCustomMap && window.customMapDbId && String(idCircuito) === String(window.customMapDbId);
-                        const topUrl = '/GiocoF/TopScore?idCircuito=' + idCircuito + (isCustomCircuito ? '&customMap=true' : '');
+                        const topUrl = '/TopScore?idCircuito=' + idCircuito + (isCustomCircuito ? '&customMap=true' : '');
                         const resTop = await fetch(topUrl);
                         const classifica = await resTop.json();
                         const mioIdx = classifica.findIndex(r => r.nakName === nakName);
