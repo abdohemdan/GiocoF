@@ -2747,7 +2747,7 @@ async function saveCircuit(silent){
     // Usa lo stesso oggetto "data" (formato pulito) già costruito sopra per localStorage.
     // NON usare {…S} perché include HTMLImageElement (customBgImg → serializzato come {})
     // e altri campi non serializzabili che corrompono il JSON nel DB.
-    params.append('mapData', JSON.stringify(data));
+    params.append('mapData', JSON.stringify(data).replace(/[\u0000-\u001F\u007F]/g, ' '));
     if (window.customMapDbId) params.append('mapId', window.customMapDbId);
     const res = await fetch('/SalvaMappaPersonalizzata', {
       method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
@@ -2898,7 +2898,7 @@ async function playCircuit(){
       params.append('nome', S.name);
       // Usa formato pulito (stesso di saveCircuit) — NON {…S} che include HTMLImageElement
       const cleanData = {name:S.name,mappa:S.mappa,rawPath:S.rawPath,smoothPath:S.smoothPath,obstacles:S.obstacles,scenery:S.scenery,colAsfalto:S.colAsfalto,colBordo:S.colBordo,colErba:S.colErba,roadW:S.roadW,opponents:S.opponents};
-      params.append('mapData', JSON.stringify(cleanData));
+      params.append('mapData', JSON.stringify(cleanData).replace(/[\u0000-\u001F\u007F]/g, ' '));
       const res = await fetch('/SalvaMappaPersonalizzata', {
         method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
       });
@@ -3092,7 +3092,7 @@ async function saveMapToDatabase() {
         const cleanData = {name:S.name,mappa:S.mappa,rawPath:S.rawPath,smoothPath:S.smoothPath,obstacles:S.obstacles,scenery:S.scenery,colAsfalto:S.colAsfalto,colBordo:S.colBordo,colErba:S.colErba,roadW:S.roadW,opponents:S.opponents};
         const params = new URLSearchParams();
         params.append('nome', mapName);
-        params.append('mapData', JSON.stringify(cleanData));
+        params.append('mapData', JSON.stringify(cleanData).replace(/[\u0000-\u001F\u007F]/g, ' '));
         const res = await fetch('/SalvaMappaPersonalizzata', {
             method:'POST', credentials:'include', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()
         });
