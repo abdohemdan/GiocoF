@@ -42,8 +42,9 @@ public class SaveMapServlet extends HttpServlet {
                 return;
             }
 
-            JSONObject mapData = new JSONObject(mapDataJson);
-
+            // Rimuovi caratteri di controllo che rompono il JSON parser
+String cleanJson = mapDataJson.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "");
+JSONObject mapData = new JSONObject(cleanJson);
             try (Connection conn = DBConnection.getConnection()) {
                 int mapId = -1;
 
@@ -56,8 +57,8 @@ public class SaveMapServlet extends HttpServlet {
                                        "WHERE id=? AND id_utente=?";
                     try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                         ps.setString(1, nome);
-                        ps.setString(2, mapData.toString());
-                        ps.setInt(3, existingId);
+                        ps.setString(2, cleanJson);
+ps.setInt(3, existingId);
                         ps.setInt(4, userId);
                         int rows = ps.executeUpdate();
                         if (rows > 0) {
@@ -80,8 +81,8 @@ public class SaveMapServlet extends HttpServlet {
                             String updateSql = "UPDATE mappe_personalizzate " +
                                                "SET mapData=?, data_creazione=NOW() WHERE id=?";
                             try (PreparedStatement pu = conn.prepareStatement(updateSql)) {
-                                pu.setString(1, mapData.toString());
-                                pu.setInt(2, mapId);
+                                pu.setString(1, cleanJson);
+pu.setInt(2, mapId);
                                 pu.executeUpdate();
                                 System.out.println("✅ Mappa aggiornata per nome, ID: " + mapId);
                             }
@@ -98,8 +99,8 @@ public class SaveMapServlet extends HttpServlet {
                             insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                         ps.setInt(1, userId);
                         ps.setString(2, nome);
-                        ps.setString(3, mapData.toString());
-                        ps.executeUpdate();
+                        ps.setString(3, cleanJson);
+ps.executeUpdate();
                         try (ResultSet rs = ps.getGeneratedKeys()) {
                             if (rs.next()) {
                                 mapId = rs.getInt(1);
