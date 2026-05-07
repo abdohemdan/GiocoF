@@ -17,6 +17,7 @@ public class SaveMapServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
@@ -44,7 +45,7 @@ public class SaveMapServlet extends HttpServlet {
 
             // Rimuovi caratteri di controllo che rompono il JSON parser
 // Usa la stringa direttamente senza parsare
-String mapData = mapDataJson;
+String mapData = new String(mapDataJson.getBytes("ISO-8859-1"), "UTF-8");
             try (Connection conn = DBConnection.getConnection()) {
                 int mapId = -1;
 
