@@ -43,8 +43,8 @@ public class SaveMapServlet extends HttpServlet {
             }
 
             // Rimuovi caratteri di controllo che rompono il JSON parser
-String cleanJson = mapDataJson.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "");
-JSONObject mapData = new JSONObject(cleanJson);
+// Usa la stringa direttamente senza parsare
+String mapData = mapDataJson;
             try (Connection conn = DBConnection.getConnection()) {
                 int mapId = -1;
 
@@ -57,7 +57,7 @@ JSONObject mapData = new JSONObject(cleanJson);
                                        "WHERE id=? AND id_utente=?";
                     try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                         ps.setString(1, nome);
-                        ps.setString(2, cleanJson);
+                        ps.setString(2, mapData);
 ps.setInt(3, existingId);
                         ps.setInt(4, userId);
                         int rows = ps.executeUpdate();
@@ -81,7 +81,7 @@ ps.setInt(3, existingId);
                             String updateSql = "UPDATE mappe_personalizzate " +
                                                "SET mapData=?, data_creazione=NOW() WHERE id=?";
                             try (PreparedStatement pu = conn.prepareStatement(updateSql)) {
-                                pu.setString(1, cleanJson);
+                                pu.setString(1, mapData);
 pu.setInt(2, mapId);
                                 pu.executeUpdate();
                                 System.out.println("✅ Mappa aggiornata per nome, ID: " + mapId);
@@ -99,7 +99,7 @@ pu.setInt(2, mapId);
                             insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                         ps.setInt(1, userId);
                         ps.setString(2, nome);
-                        ps.setString(3, cleanJson);
+                        ps.setString(3, mapData);
 ps.executeUpdate();
                         try (ResultSet rs = ps.getGeneratedKeys()) {
                             if (rs.next()) {
