@@ -2145,3 +2145,47 @@ body {
     padding: 11px 24px !important;
     font-size: 0.92em !important;
 }
+/* ========== MOBILE / TOUCH ========== */
+@media screen and (max-width: 768px) {
+
+  /* Forza landscape tramite rotazione se in portrait */
+  @media (orientation: portrait) {
+    #gamecenter {
+      transform: rotate(90deg);
+      transform-origin: left top;
+      width: 100vh;
+      height: 100vw;
+      position: fixed;
+      top: 100%;
+      left: 0;
+      overflow: hidden;
+    }
+  }
+
+  /* In landscape: canvas occupa tutto lo schermo */
+  @media (orientation: landscape) {
+    #gamecenter {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    #gameArea {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: calc(100vh - 40px) !important;
+      aspect-ratio: unset !important;
+      margin-top: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    #dashboard {
+      font-size: 0.7em;
+      padding: 4px 8px;
+    }
+  }
+}

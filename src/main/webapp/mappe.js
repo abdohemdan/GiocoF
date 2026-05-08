@@ -568,3 +568,124 @@ function resetGiocoCompleto() {
     document.getElementById("playButton").style.display="block";
     document.addEventListener('keydown',keyDown); document.addEventListener('keyup',keyUp);
 }
+// ========== CONTROLLI TOUCH MOBILE ==========
+(function() {
+  'use strict';
+
+  // Crea il joystick solo su dispositivi touch
+  if (!('ontouchstart' in window) && !navigator.maxTouchPoints) return;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    #touch-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 20px;
+      z-index: 9999;
+      pointer-events: none;
+      user-select: none;
+    }
+    .touch-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: all;
+    }
+    .touch-row {
+      display: flex;
+      gap: 6px;
+    }
+    .touch-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+    .touch-btn:active,
+    .touch-btn.pressed {
+      background: rgba(255, 204, 0, 0.45);
+      border-color: #ffcc00;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const div = document.createElement('div');
+  div.id = 'touch-controls';
+  div.innerHTML = `
+    <div class="touch-group">
+      <div class="touch-btn" id="btn-left">◀</div>
+    </div>
+    <div class="touch-group">
+      <div class="touch-btn" id="btn-up">▲</div>
+      <div class="touch-row">
+        <div class="touch-btn" id="btn-down">▼</div>
+      </div>
+    </div>
+    <div class="touch-group">
+      <div class="touch-btn" id="btn-right">▶</div>
+    </div>
+  `;
+  document.body.appendChild(div);
+
+  function fakeKey(type, key) {
+    const evt = new KeyboardEvent(type, { key, bubbles: true });
+    document.dispatchEvent(evt);
+  }
+
+  function bindBtn(id, key) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+
+    btn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      fakeKey('keydown', key);
+    }, { passive: false });
+
+    btn.addEventListener('touchend', e => {
+      e.preventDefault();
+      btn.classList.remove('pressed');
+      fakeKey('keyup', key);
+    }, { passive: false });
+
+    btn.addEventListener('touchcancel', e => {
+      e.preventDefault();
+      btn.classList.remove('pressed');
+      fakeKey('keyup', key);
+    }, { passive: false });
+  }
+
+  bindBtn('btn-up',    'ArrowUp');
+  bindBtn('btn-down',  'ArrowDown');
+  bindBtn('btn-left',  'ArrowLeft');
+  bindBtn('btn-right', 'ArrowRight');
+
+  // Mostra/nascondi i controlli solo durante la gara
+  const observer = new MutationObserver(() => {
+    const dashboard = document.getElementById('dashboard');
+    const controls  = document.getElementById('touch-controls');
+    if (!dashboard || !controls) return;
+    controls.style.display = (dashboard.style.display !== 'none' && dashboard.style.display !== '') ? 'flex' : 'none';
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard) observer.observe(dashboard, { attributes: true, attributeFilter: ['style'] });
+    const controls = document.getElementById('touch-controls');
+    if (controls) controls.style.display = 'none';
+  });
+})();
