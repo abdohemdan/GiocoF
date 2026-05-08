@@ -40,7 +40,7 @@ public class LoadMapServlet extends HttpServlet {
             JSONArray mappeArray = new JSONArray();
 
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "SELECT id, nome, mapData, data_creazione " +
+                String sql = "SELECT id, nome, \"mapData\", data_creazione " +
                              "FROM mappe_personalizzate " +
                              "WHERE id_utente = ? " +
                              "ORDER BY data_creazione DESC";

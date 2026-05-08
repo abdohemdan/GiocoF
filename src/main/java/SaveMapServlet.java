@@ -54,7 +54,7 @@ String mapData = new String(mapDataJson.getBytes("ISO-8859-1"), "UTF-8");
                 if (mapIdStr != null && !mapIdStr.isEmpty()) {
                     int existingId = Integer.parseInt(mapIdStr);
                     String updateSql = "UPDATE mappe_personalizzate " +
-                                       "SET nome=?, \"mapData\"=?, data_creazione=NOW() " +
+                                       "SET nome=?, \"mapData\"=?::jsonb, data_creazione=NOW() " +
                                        "WHERE id=? AND id_utente=?";
                     try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                         ps.setString(1, nome);
@@ -80,7 +80,7 @@ ps.setInt(3, existingId);
                         if (rs.next()) {
                             mapId = rs.getInt("id");
                             String updateSql = "UPDATE mappe_personalizzate " +
-                                               "SET \"mapData\"=?, data_creazione=NOW() WHERE id=?";
+                                               "SET \"mapData\"=?::jsonb, data_creazione=NOW() WHERE id=?";
                             try (PreparedStatement pu = conn.prepareStatement(updateSql)) {
                                 pu.setString(1, mapData);
 pu.setInt(2, mapId);
@@ -95,7 +95,7 @@ pu.setInt(2, mapId);
                 if (mapId == -1) {
                     String insertSql = "INSERT INTO mappe_personalizzate " +
                                        "(id_utente, nome, \"mapData\", data_creazione) " +
-                                       "VALUES (?, ?, ?, NOW())";
+                                       "VALUES (?, ?, ?::jsonb, NOW())";
                     try (PreparedStatement ps = conn.prepareStatement(
                             insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                         ps.setInt(1, userId);
