@@ -517,6 +517,25 @@ function avviaGioco(idMappa) {
     gameLoopInterval=setInterval(gameLoop,gameFrameRate,myCamera,myCircuit,myBackground,myFerrari);
     gameLoop(myCamera,myCircuit,myBackground,myFerrari);
     avviaTimer();
+    // Richiedi permesso giroscopio su iOS
+const gyroBtn = document.getElementById('gyroPermBtn');
+if (typeof DeviceOrientationEvent !== 'undefined' && 
+    typeof DeviceOrientationEvent.requestPermission === 'function') {
+    if (gyroBtn) {
+        gyroBtn.style.display = 'block';
+        gyroBtn.onclick = function() {
+            DeviceOrientationEvent.requestPermission()
+                .then(state => {
+                    if (state === 'granted') {
+                        gyroBtn.style.display = 'none';
+                        initGyroscope();
+                    }
+                });
+        };
+    }
+} else {
+    initGyroscope();
+}
 }
 
 function rigiocaMappa() {
