@@ -572,97 +572,68 @@ function resetGiocoCompleto() {
 (function () {
     'use strict';
 
-    // Solo su dispositivi touch
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    // Soglie di inclinazione (gradi)
-    var SOGLIA_STERZO    = 8;   // beta: inclinazione avanti/indietro (accelera/frena)
-    var SOGLIA_DIREZIONE = 8;   // gamma: inclinazione sinistra/destra (sterza)
-    var SOGLIA_MAX       = 35;  // oltre questa soglia = massima intensità
+    // ── Indicatore visivo debug (visibile sul telefono) ──
+    var dbg = document.createElement('div');
+    dbg.style.cssText = 'position:fixed;top:40px;left:8px;z-index:999999;background:rgba(0,0,0,0.75);color:#0ff;font-family:monospace;font-size:13px;padding:6px 10px;border-radius:6px;pointer-events:none;line-height:1.6;';
+    dbg.innerHTML = '📱 Gyro: attesa...';
+    document.body.appendChild(dbg);
 
-    // Stato attuale tasti simulati
-    var stato = { up: false, down: false, left: false, right: false };
+    var SOGLIA = 10;
+    var stato  = { up:false, down:false, left:false, right:false };
 
-    function fakeKeyDown(key) {
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
-    }
-    function fakeKeyUp(key) {
-        document.dispatchEvent(new KeyboardEvent('keyup', { key: key, bubbles: true }));
-    }
+    function fakeDown(k){ document.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true})); }
+    function fakeUp(k){   document.dispatchEvent(new KeyboardEvent('keyup',  {key:k,bubbles:true})); }
 
-    function aggiornaStato(nuovoStato) {
-        // ArrowUp / ArrowDown
-        if (nuovoStato.up !== stato.up) {
-            nuovoStato.up ? fakeKeyDown('ArrowUp') : fakeKeyUp('ArrowUp');
-            stato.up = nuovoStato.up;
-        }
-        if (nuovoStato.down !== stato.down) {
-            nuovoStato.down ? fakeKeyDown('ArrowDown') : fakeKeyUp('ArrowDown');
-            stato.down = nuovoStato.down;
-        }
-        // ArrowLeft / ArrowRight
-        if (nuovoStato.left !== stato.left) {
-            nuovoStato.left ? fakeKeyDown('ArrowLeft') : fakeKeyUp('ArrowLeft');
-            stato.left = nuovoStato.left;
-        }
-        if (nuovoStato.right !== stato.right) {
-            nuovoStato.right ? fakeKeyDown('ArrowRight') : fakeKeyUp('ArrowRight');
-            stato.right = nuovoStato.right;
-        }
+    function aggiornaStato(n) {
+        if (n.up    !== stato.up)    { n.up    ? fakeDown('ArrowUp')    : fakeUp('ArrowUp');    stato.up    = n.up;    }
+        if (n.down  !== stato.down)  { n.down  ? fakeDown('ArrowDown')  : fakeUp('ArrowDown');  stato.down  = n.down;  }
+        if (n.left  !== stato.left)  { n.left  ? fakeDown('ArrowLeft')  : fakeUp('ArrowLeft');  stato.left  = n.left;  }
+        if (n.right !== stato.right) { n.right ? fakeDown('ArrowRight') : fakeUp('ArrowRight'); stato.right = n.right; }
     }
 
-    function gestisciGyro(event) {
-        if (!myFerrari) return; // solo durante la gara
+    function onGyro(e) {
+        var b = e.beta  !== null ? Math.round(e.beta)  : null;
+        var g = e.gamma !== null ? Math.round(e.gamma) : null;
 
-        var beta  = event.beta  || 0; // -180/180: inclinazione avanti/indietro
-        var gamma = event.gamma || 0; // -90/90:   inclinazione sinistra/destra
+        dbg.innerHTML = '📱 beta:' + b + ' gamma:' + g +
+            '<br>▲' + (b < -SOGLIA ? '✅':'❌') +
+            ' ▼' + (b > SOGLIA ? '✅':'❌') +
+            ' ◀' + (g < -SOGLIA ? '✅':'❌') +
+            ' ▶' + (g > SOGLIA ? '✅':'❌');
 
-        // In landscape il telefono è ruotato, quindi beta e gamma si scambiano
-        // gamma diventa l'asse di sterzo, beta l'accelerazione
-        var sterzo     = gamma; // negativo = sinistra, positivo = destra
-        var accelera   = beta;  // negativo = avanti (accelera), positivo = indietro (frena)
+        if (b === null || g === null) { dbg.innerHTML = '❌ Gyro non disponibile'; return; }
 
-        var nuovoStato = {
-            up:    accelera < -SOGLIA_STERZO,
-            down:  accelera >  SOGLIA_STERZO,
-            left:  sterzo   < -SOGLIA_DIREZIONE,
-            right: sterzo   >  SOGLIA_DIREZIONE
-        };
-
-        aggiornaStato(nuovoStato);
+        aggiornaStato({
+            up:    b < -SOGLIA,
+            down:  b >  SOGLIA,
+            left:  g < -SOGLIA,
+            right: g >  SOGLIA
+        });
     }
 
-    // iOS 13+ richiede permesso esplicito
-    function richiediPermesso() {
+    function avviaGyro() {
         if (typeof DeviceOrientationEvent !== 'undefined' &&
             typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
-                .then(function (risposta) {
-                    if (risposta === 'granted') {
-                        window.addEventListener('deviceorientation', gestisciGyro, true);
+                .then(function(r) {
+                    if (r === 'granted') {
+                        window.addEventListener('deviceorientation', onGyro, true);
+                        dbg.innerHTML = '✅ Gyro iOS attivo';
+                    } else {
+                        dbg.innerHTML = '❌ Permesso negato';
                     }
-                })
-                .catch(console.error);
+                }).catch(function(){ dbg.innerHTML = '❌ Errore permesso'; });
         } else {
-            // Android e iOS < 13: nessun permesso necessario
-            window.addEventListener('deviceorientation', gestisciGyro, true);
+            window.addEventListener('deviceorientation', onGyro, true);
+            dbg.innerHTML = '⏳ Gyro in ascolto...';
         }
     }
 
-    // Chiedi permesso al primo tocco (necessario su iOS)
-    var permessoRichiesto = false;
-    document.addEventListener('touchstart', function () {
-        if (!permessoRichiesto) {
-            permessoRichiesto = true;
-            richiediPermesso();
-        }
-    }, { once: false });
-
-    // Rilascia tutti i tasti quando si ferma la gara
-    document.addEventListener('visibilitychange', function () {
-        if (document.hidden) {
-            aggiornaStato({ up: false, down: false, left: false, right: false });
-        }
+    var avviato = false;
+    document.addEventListener('touchstart', function() {
+        if (!avviato) { avviato = true; avviaGyro(); }
     });
 
 })();
