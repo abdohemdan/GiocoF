@@ -568,3 +568,101 @@ function resetGiocoCompleto() {
     document.getElementById("playButton").style.display="block";
     document.addEventListener('keydown',keyDown); document.addEventListener('keyup',keyUp);
 }
+// ========== CONTROLLI GIROSCOPIO MOBILE ==========
+(function () {
+    'use strict';
+
+    // Solo su dispositivi touch
+    if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
+
+    // Soglie di inclinazione (gradi)
+    var SOGLIA_STERZO    = 8;   // beta: inclinazione avanti/indietro (accelera/frena)
+    var SOGLIA_DIREZIONE = 8;   // gamma: inclinazione sinistra/destra (sterza)
+    var SOGLIA_MAX       = 35;  // oltre questa soglia = massima intensità
+
+    // Stato attuale tasti simulati
+    var stato = { up: false, down: false, left: false, right: false };
+
+    function fakeKeyDown(key) {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+    }
+    function fakeKeyUp(key) {
+        document.dispatchEvent(new KeyboardEvent('keyup', { key: key, bubbles: true }));
+    }
+
+    function aggiornaStato(nuovoStato) {
+        // ArrowUp / ArrowDown
+        if (nuovoStato.up !== stato.up) {
+            nuovoStato.up ? fakeKeyDown('ArrowUp') : fakeKeyUp('ArrowUp');
+            stato.up = nuovoStato.up;
+        }
+        if (nuovoStato.down !== stato.down) {
+            nuovoStato.down ? fakeKeyDown('ArrowDown') : fakeKeyUp('ArrowDown');
+            stato.down = nuovoStato.down;
+        }
+        // ArrowLeft / ArrowRight
+        if (nuovoStato.left !== stato.left) {
+            nuovoStato.left ? fakeKeyDown('ArrowLeft') : fakeKeyUp('ArrowLeft');
+            stato.left = nuovoStato.left;
+        }
+        if (nuovoStato.right !== stato.right) {
+            nuovoStato.right ? fakeKeyDown('ArrowRight') : fakeKeyUp('ArrowRight');
+            stato.right = nuovoStato.right;
+        }
+    }
+
+    function gestisciGyro(event) {
+        if (!myFerrari) return; // solo durante la gara
+
+        var beta  = event.beta  || 0; // -180/180: inclinazione avanti/indietro
+        var gamma = event.gamma || 0; // -90/90:   inclinazione sinistra/destra
+
+        // In landscape il telefono è ruotato, quindi beta e gamma si scambiano
+        // gamma diventa l'asse di sterzo, beta l'accelerazione
+        var sterzo     = gamma; // negativo = sinistra, positivo = destra
+        var accelera   = beta;  // negativo = avanti (accelera), positivo = indietro (frena)
+
+        var nuovoStato = {
+            up:    accelera < -SOGLIA_STERZO,
+            down:  accelera >  SOGLIA_STERZO,
+            left:  sterzo   < -SOGLIA_DIREZIONE,
+            right: sterzo   >  SOGLIA_DIREZIONE
+        };
+
+        aggiornaStato(nuovoStato);
+    }
+
+    // iOS 13+ richiede permesso esplicito
+    function richiediPermesso() {
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+                .then(function (risposta) {
+                    if (risposta === 'granted') {
+                        window.addEventListener('deviceorientation', gestisciGyro, true);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            // Android e iOS < 13: nessun permesso necessario
+            window.addEventListener('deviceorientation', gestisciGyro, true);
+        }
+    }
+
+    // Chiedi permesso al primo tocco (necessario su iOS)
+    var permessoRichiesto = false;
+    document.addEventListener('touchstart', function () {
+        if (!permessoRichiesto) {
+            permessoRichiesto = true;
+            richiediPermesso();
+        }
+    }, { once: false });
+
+    // Rilascia tutti i tasti quando si ferma la gara
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            aggiornaStato({ up: false, down: false, left: false, right: false });
+        }
+    });
+
+})();
