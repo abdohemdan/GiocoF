@@ -574,11 +574,10 @@ function resetGiocoCompleto() {
 
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    var SOGLIA_STERZO  = 8;
-    var SOGLIA_ACCEL   = 10;
-    var gyroAttivo     = false;
-    var sterzoCorrente = 0;  // valore continuo gamma
-    var accelCorrente  = 0;  // valore continuo beta
+    var SOGLIA     = 8;   // gradi minimi per sterzare
+    var VELOCITA   = 300; // velocità fissa
+    var gyroAttivo = false;
+    var gammaCorrente = 0;
 
     // ── Indicatore visivo debug ──
     var dbg = document.createElement('div');
@@ -599,49 +598,40 @@ function resetGiocoCompleto() {
     document.body.appendChild(btnGyro);
 
     function onGyro(e) {
-        var beta  = e.beta  !== null ? e.beta  : 0;
         var gamma = e.gamma !== null ? e.gamma : 0;
-        sterzoCorrente = gamma;
-        accelCorrente  = beta;
-
+        gammaCorrente = gamma;
         dbg.style.display = 'block';
-        dbg.innerHTML = 'γ:' + Math.round(gamma) + ' β:' + Math.round(beta) +
-            '<br>◀' + (gamma < -SOGLIA_STERZO ? '✅':'❌') +
-            ' ▶' + (gamma > SOGLIA_STERZO ? '✅':'❌');
+        dbg.innerHTML = 'γ:' + Math.round(gamma) +
+            ' ◀' + (gamma < -SOGLIA ? '✅':'❌') +
+            ' ▶' + (gamma > SOGLIA ? '✅':'❌');
     }
 
-    // ── Loop separato che applica il movimento direttamente a myFerrari ──
+    // ── Loop principale: velocità fissa + sterzo col giroscopio ──
     setInterval(function() {
         if (!gyroAttivo) return;
         if (typeof myFerrari === 'undefined' || !myFerrari) return;
         if (myFerrari.hasCollided) return;
         if (typeof myCircuit === 'undefined' || !myCircuit) return;
 
-        // STERZO — gamma: negativo=sinistra, positivo=destra
-        if (sterzoCorrente < -SOGLIA_STERZO) {
-            var intensita = Math.min(Math.abs(sterzoCorrente) / 45, 1);
+        // Velocità sempre costante
+        myFerrari.speed = VELOCITA;
+
+        // Sterzo proporzionale all'inclinazione
+        if (gammaCorrente < -SOGLIA) {
+            var intensita = Math.min(Math.abs(gammaCorrente) / 40, 1);
             myFerrari.carImageCrop = [143, 233, 251, 32];
-            myFerrari.posX -= 200 * intensita;
+            myFerrari.posX -= Math.round(200 * intensita);
             if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
-        } else if (sterzoCorrente > SOGLIA_STERZO) {
-            var intensita = Math.min(Math.abs(sterzoCorrente) / 45, 1);
+        } else if (gammaCorrente > SOGLIA) {
+            var intensita = Math.min(Math.abs(gammaCorrente) / 40, 1);
             myFerrari.carImageCrop = [7, 97, 171, 32];
-            myFerrari.posX += 200 * intensita;
+            myFerrari.posX += Math.round(200 * intensita);
             if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
         } else {
             myFerrari.carImageCrop = [7, 64, 132, 32];
         }
 
-        // ACCELERAZIONE — beta: negativo=avanti(accelera), positivo=indietro(frena)
-        if (accelCorrente < -SOGLIA_ACCEL) {
-            myFerrari.speed += 50;
-            if (myFerrari.speed >= 500) myFerrari.speed = 500;
-        } else if (accelCorrente > SOGLIA_ACCEL) {
-            myFerrari.speed -= 50;
-            if (myFerrari.speed <= -300) myFerrari.speed = -300;
-        }
-
-    }, 50); // ogni 50ms = 20fps come il game loop
+    }, 50);
 
     function avviaGyro() {
         if (gyroAttivo) return;
