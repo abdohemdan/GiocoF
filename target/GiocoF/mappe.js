@@ -574,11 +574,13 @@ function resetGiocoCompleto() {
 
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    var SOGLIA = 10;
-    var stato  = { up:false, down:false, left:false, right:false };
-    var gyroAttivo = false;
+    var SOGLIA_STERZO  = 8;
+    var SOGLIA_ACCEL   = 10;
+    var gyroAttivo     = false;
+    var sterzoCorrente = 0;  // valore continuo gamma
+    var accelCorrente  = 0;  // valore continuo beta
 
-    // ── Indicatore visivo (rimovibile dopo test) ──
+    // ── Indicatore visivo debug ──
     var dbg = document.createElement('div');
     dbg.style.cssText = 'position:fixed;top:40px;left:8px;z-index:999999;background:rgba(0,0,0,0.75);color:#0ff;font-family:monospace;font-size:12px;padding:5px 8px;border-radius:6px;pointer-events:none;display:none;';
     document.body.appendChild(dbg);
@@ -587,67 +589,59 @@ function resetGiocoCompleto() {
     var btnGyro = document.createElement('button');
     btnGyro.textContent = '🎮 Attiva Giroscopio';
     btnGyro.style.cssText = [
-        'position:fixed',
-        'bottom:20px',
-        'left:50%',
-        'transform:translateX(-50%)',
-        'z-index:999999',
-        'background:linear-gradient(135deg,#ffcc00,#ff9900)',
-        'color:#000',
-        'font-family:Orbitron,monospace',
-        'font-size:0.85em',
-        'font-weight:700',
-        'letter-spacing:2px',
-        'border:none',
-        'border-radius:30px',
-        'padding:14px 28px',
-        'cursor:pointer',
-        'display:none',
+        'position:fixed','bottom:20px','left:50%','transform:translateX(-50%)',
+        'z-index:999999','background:linear-gradient(135deg,#ffcc00,#ff9900)',
+        'color:#000','font-family:Orbitron,monospace','font-size:0.85em',
+        'font-weight:700','letter-spacing:2px','border:none','border-radius:30px',
+        'padding:14px 28px','cursor:pointer','display:none',
         'box-shadow:0 4px 20px rgba(0,0,0,0.5)'
     ].join(';');
     document.body.appendChild(btnGyro);
 
-    function fakeDown(k){ document.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true})); }
-    function fakeUp(k){   document.dispatchEvent(new KeyboardEvent('keyup',  {key:k,bubbles:true})); }
-
-    function aggiornaStato(n) {
-        if (n.up    !== stato.up)    { n.up    ? fakeDown('ArrowUp')    : fakeUp('ArrowUp');    stato.up    = n.up;    }
-        if (n.down  !== stato.down)  { n.down  ? fakeDown('ArrowDown')  : fakeUp('ArrowDown');  stato.down  = n.down;  }
-        if (n.left  !== stato.left)  { n.left  ? fakeDown('ArrowLeft')  : fakeUp('ArrowLeft');  stato.left  = n.left;  }
-        if (n.right !== stato.right) { n.right ? fakeDown('ArrowRight') : fakeUp('ArrowRight'); stato.right = n.right; }
-    }
-
     function onGyro(e) {
-        var beta  = e.beta  !== null ? Math.round(e.beta)  : null;
-        var gamma = e.gamma !== null ? Math.round(e.gamma) : null;
-        if (beta === null || gamma === null) return;
-
-        // In landscape il telefono è ruotato 90°:
-        // gamma (-90/+90) = sinistra/destra → STERZO
-        // beta  (-180/+180) = su/giù → ACCELERA/FRENA
-        // Quando il telefono è orizzontale con schermo verso l'alto:
-        // inclinare verso sinistra: gamma negativo → ArrowLeft
-        // inclinare verso destra:  gamma positivo → ArrowRight
-        // inclinare avanti:        beta negativo  → ArrowUp
-        // inclinare indietro:      beta positivo  → ArrowDown
-
-        var sterzo   = gamma; // sinistra/destra
-        var accelera = beta;  // avanti/indietro
+        var beta  = e.beta  !== null ? e.beta  : 0;
+        var gamma = e.gamma !== null ? e.gamma : 0;
+        sterzoCorrente = gamma;
+        accelCorrente  = beta;
 
         dbg.style.display = 'block';
-        dbg.innerHTML = 'sterzo(γ):' + sterzo + '<br>accel(β):' + accelera +
-            '<br>◀' + (sterzo < -SOGLIA ? '✅':'❌') +
-            ' ▶' + (sterzo > SOGLIA ? '✅':'❌') +
-            '<br>▲' + (accelera < -SOGLIA ? '✅':'❌') +
-            ' ▼' + (accelera > SOGLIA ? '✅':'❌');
-
-        aggiornaStato({
-            left:  sterzo   < -SOGLIA,
-            right: sterzo   >  SOGLIA,
-            up:    accelera < -SOGLIA,
-            down:  accelera >  SOGLIA
-        });
+        dbg.innerHTML = 'γ:' + Math.round(gamma) + ' β:' + Math.round(beta) +
+            '<br>◀' + (gamma < -SOGLIA_STERZO ? '✅':'❌') +
+            ' ▶' + (gamma > SOGLIA_STERZO ? '✅':'❌');
     }
+
+    // ── Loop separato che applica il movimento direttamente a myFerrari ──
+    setInterval(function() {
+        if (!gyroAttivo) return;
+        if (typeof myFerrari === 'undefined' || !myFerrari) return;
+        if (myFerrari.hasCollided) return;
+        if (typeof myCircuit === 'undefined' || !myCircuit) return;
+
+        // STERZO — gamma: negativo=sinistra, positivo=destra
+        if (sterzoCorrente < -SOGLIA_STERZO) {
+            var intensita = Math.min(Math.abs(sterzoCorrente) / 45, 1);
+            myFerrari.carImageCrop = [143, 233, 251, 32];
+            myFerrari.posX -= 200 * intensita;
+            if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
+        } else if (sterzoCorrente > SOGLIA_STERZO) {
+            var intensita = Math.min(Math.abs(sterzoCorrente) / 45, 1);
+            myFerrari.carImageCrop = [7, 97, 171, 32];
+            myFerrari.posX += 200 * intensita;
+            if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
+        } else {
+            myFerrari.carImageCrop = [7, 64, 132, 32];
+        }
+
+        // ACCELERAZIONE — beta: negativo=avanti(accelera), positivo=indietro(frena)
+        if (accelCorrente < -SOGLIA_ACCEL) {
+            myFerrari.speed += 50;
+            if (myFerrari.speed >= 500) myFerrari.speed = 500;
+        } else if (accelCorrente > SOGLIA_ACCEL) {
+            myFerrari.speed -= 50;
+            if (myFerrari.speed <= -300) myFerrari.speed = -300;
+        }
+
+    }, 50); // ogni 50ms = 20fps come il game loop
 
     function avviaGyro() {
         if (gyroAttivo) return;
@@ -665,13 +659,10 @@ function resetGiocoCompleto() {
                     } else {
                         gyroAttivo = false;
                         btnGyro.style.display = 'block';
-                        dbg.style.display = 'block';
                         dbg.textContent = '❌ Permesso negato';
+                        dbg.style.display = 'block';
                     }
-                }).catch(function() {
-                    gyroAttivo = false;
-                    btnGyro.style.display = 'block';
-                });
+                }).catch(function() { gyroAttivo = false; btnGyro.style.display = 'block'; });
         } else {
             window.addEventListener('deviceorientation', onGyro, true);
             dbg.style.display = 'block';
@@ -684,9 +675,7 @@ function resetGiocoCompleto() {
         btnGyro.style.display = 'block';
         btnGyro.addEventListener('click', avviaGyro);
     } else {
-        document.addEventListener('touchstart', function() {
-            avviaGyro();
-        }, { once: true });
+        document.addEventListener('touchstart', function() { avviaGyro(); }, { once: true });
     }
 
 })();
