@@ -578,7 +578,7 @@ function resetGiocoCompleto() {
     var stato  = { up:false, down:false, left:false, right:false };
     var gyroAttivo = false;
 
-    // ── Indicatore visivo ──
+    // ── Indicatore visivo (rimovibile dopo test) ──
     var dbg = document.createElement('div');
     dbg.style.cssText = 'position:fixed;top:40px;left:8px;z-index:999999;background:rgba(0,0,0,0.75);color:#0ff;font-family:monospace;font-size:12px;padding:5px 8px;border-radius:6px;pointer-events:none;display:none;';
     document.body.appendChild(dbg);
@@ -618,18 +618,34 @@ function resetGiocoCompleto() {
     }
 
     function onGyro(e) {
-        var b = e.beta  !== null ? Math.round(e.beta)  : null;
-        var g = e.gamma !== null ? Math.round(e.gamma) : null;
-        if (b === null || g === null) return;
+        var beta  = e.beta  !== null ? Math.round(e.beta)  : null;
+        var gamma = e.gamma !== null ? Math.round(e.gamma) : null;
+        if (beta === null || gamma === null) return;
+
+        // In landscape il telefono è ruotato 90°:
+        // gamma (-90/+90) = sinistra/destra → STERZO
+        // beta  (-180/+180) = su/giù → ACCELERA/FRENA
+        // Quando il telefono è orizzontale con schermo verso l'alto:
+        // inclinare verso sinistra: gamma negativo → ArrowLeft
+        // inclinare verso destra:  gamma positivo → ArrowRight
+        // inclinare avanti:        beta negativo  → ArrowUp
+        // inclinare indietro:      beta positivo  → ArrowDown
+
+        var sterzo   = gamma; // sinistra/destra
+        var accelera = beta;  // avanti/indietro
 
         dbg.style.display = 'block';
-        dbg.innerHTML = 'β:' + b + ' γ:' + g;
+        dbg.innerHTML = 'sterzo(γ):' + sterzo + '<br>accel(β):' + accelera +
+            '<br>◀' + (sterzo < -SOGLIA ? '✅':'❌') +
+            ' ▶' + (sterzo > SOGLIA ? '✅':'❌') +
+            '<br>▲' + (accelera < -SOGLIA ? '✅':'❌') +
+            ' ▼' + (accelera > SOGLIA ? '✅':'❌');
 
         aggiornaStato({
-            up:    b < -SOGLIA,
-            down:  b >  SOGLIA,
-            left:  g < -SOGLIA,
-            right: g >  SOGLIA
+            left:  sterzo   < -SOGLIA,
+            right: sterzo   >  SOGLIA,
+            up:    accelera < -SOGLIA,
+            down:  accelera >  SOGLIA
         });
     }
 
@@ -640,7 +656,6 @@ function resetGiocoCompleto() {
 
         if (typeof DeviceOrientationEvent !== 'undefined' &&
             typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // iOS 13+
             DeviceOrientationEvent.requestPermission()
                 .then(function(r) {
                     if (r === 'granted') {
@@ -651,28 +666,24 @@ function resetGiocoCompleto() {
                         gyroAttivo = false;
                         btnGyro.style.display = 'block';
                         dbg.style.display = 'block';
-                        dbg.textContent = '❌ Permesso negato — riprova';
+                        dbg.textContent = '❌ Permesso negato';
                     }
                 }).catch(function() {
                     gyroAttivo = false;
                     btnGyro.style.display = 'block';
                 });
         } else {
-            // Android / iOS < 13
             window.addEventListener('deviceorientation', onGyro, true);
             dbg.style.display = 'block';
             dbg.textContent = '✅ Gyro attivo';
         }
     }
 
-    // Mostra il bottone solo su dispositivi che richiedono permesso (iOS 13+)
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iPhone — mostra bottone
         btnGyro.style.display = 'block';
         btnGyro.addEventListener('click', avviaGyro);
     } else {
-        // Android — avvia automaticamente al primo tocco
         document.addEventListener('touchstart', function() {
             avviaGyro();
         }, { once: true });
