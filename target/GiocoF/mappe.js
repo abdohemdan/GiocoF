@@ -517,7 +517,6 @@ function avviaGioco(idMappa) {
     gameLoopInterval=setInterval(gameLoop,gameFrameRate,myCamera,myCircuit,myBackground,myFerrari);
     gameLoop(myCamera,myCircuit,myBackground,myFerrari);
     avviaTimer();
-    
 }
 
 function rigiocaMappa() {
@@ -575,14 +574,38 @@ function resetGiocoCompleto() {
 
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    // ── Indicatore visivo debug (visibile sul telefono) ──
-    var dbg = document.createElement('div');
-    dbg.style.cssText = 'position:fixed;top:40px;left:8px;z-index:999999;background:rgba(0,0,0,0.75);color:#0ff;font-family:monospace;font-size:13px;padding:6px 10px;border-radius:6px;pointer-events:none;line-height:1.6;';
-    dbg.innerHTML = '📱 Gyro: attesa...';
-    document.body.appendChild(dbg);
-
     var SOGLIA = 10;
     var stato  = { up:false, down:false, left:false, right:false };
+    var gyroAttivo = false;
+
+    // ── Indicatore visivo ──
+    var dbg = document.createElement('div');
+    dbg.style.cssText = 'position:fixed;top:40px;left:8px;z-index:999999;background:rgba(0,0,0,0.75);color:#0ff;font-family:monospace;font-size:12px;padding:5px 8px;border-radius:6px;pointer-events:none;display:none;';
+    document.body.appendChild(dbg);
+
+    // ── Bottone permesso iOS ──
+    var btnGyro = document.createElement('button');
+    btnGyro.textContent = '🎮 Attiva Giroscopio';
+    btnGyro.style.cssText = [
+        'position:fixed',
+        'bottom:20px',
+        'left:50%',
+        'transform:translateX(-50%)',
+        'z-index:999999',
+        'background:linear-gradient(135deg,#ffcc00,#ff9900)',
+        'color:#000',
+        'font-family:Orbitron,monospace',
+        'font-size:0.85em',
+        'font-weight:700',
+        'letter-spacing:2px',
+        'border:none',
+        'border-radius:30px',
+        'padding:14px 28px',
+        'cursor:pointer',
+        'display:none',
+        'box-shadow:0 4px 20px rgba(0,0,0,0.5)'
+    ].join(';');
+    document.body.appendChild(btnGyro);
 
     function fakeDown(k){ document.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true})); }
     function fakeUp(k){   document.dispatchEvent(new KeyboardEvent('keyup',  {key:k,bubbles:true})); }
@@ -597,14 +620,10 @@ function resetGiocoCompleto() {
     function onGyro(e) {
         var b = e.beta  !== null ? Math.round(e.beta)  : null;
         var g = e.gamma !== null ? Math.round(e.gamma) : null;
+        if (b === null || g === null) return;
 
-        dbg.innerHTML = '📱 beta:' + b + ' gamma:' + g +
-            '<br>▲' + (b < -SOGLIA ? '✅':'❌') +
-            ' ▼' + (b > SOGLIA ? '✅':'❌') +
-            ' ◀' + (g < -SOGLIA ? '✅':'❌') +
-            ' ▶' + (g > SOGLIA ? '✅':'❌');
-
-        if (b === null || g === null) { dbg.innerHTML = '❌ Gyro non disponibile'; return; }
+        dbg.style.display = 'block';
+        dbg.innerHTML = 'β:' + b + ' γ:' + g;
 
         aggiornaStato({
             up:    b < -SOGLIA,
@@ -615,26 +634,48 @@ function resetGiocoCompleto() {
     }
 
     function avviaGyro() {
+        if (gyroAttivo) return;
+        gyroAttivo = true;
+        btnGyro.style.display = 'none';
+
         if (typeof DeviceOrientationEvent !== 'undefined' &&
             typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+
             DeviceOrientationEvent.requestPermission()
                 .then(function(r) {
                     if (r === 'granted') {
                         window.addEventListener('deviceorientation', onGyro, true);
-                        dbg.innerHTML = '✅ Gyro iOS attivo';
+                        dbg.style.display = 'block';
+                        dbg.textContent = '✅ Gyro attivo';
                     } else {
-                        dbg.innerHTML = '❌ Permesso negato';
+                        gyroAttivo = false;
+                        btnGyro.style.display = 'block';
+                        dbg.style.display = 'block';
+                        dbg.textContent = '❌ Permesso negato — riprova';
                     }
-                }).catch(function(){ dbg.innerHTML = '❌ Errore permesso'; });
+                }).catch(function() {
+                    gyroAttivo = false;
+                    btnGyro.style.display = 'block';
+                });
         } else {
+            // Android / iOS < 13
             window.addEventListener('deviceorientation', onGyro, true);
-            dbg.innerHTML = '⏳ Gyro in ascolto...';
+            dbg.style.display = 'block';
+            dbg.textContent = '✅ Gyro attivo';
         }
     }
 
-    var avviato = false;
-    document.addEventListener('touchstart', function() {
-        if (!avviato) { avviato = true; avviaGyro(); }
-    });
+    // Mostra il bottone solo su dispositivi che richiedono permesso (iOS 13+)
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iPhone — mostra bottone
+        btnGyro.style.display = 'block';
+        btnGyro.addEventListener('click', avviaGyro);
+    } else {
+        // Android — avvia automaticamente al primo tocco
+        document.addEventListener('touchstart', function() {
+            avviaGyro();
+        }, { once: true });
+    }
 
 })();
