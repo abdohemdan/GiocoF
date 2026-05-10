@@ -569,20 +569,22 @@ function resetGiocoCompleto() {
     document.addEventListener('keydown',keyDown); document.addEventListener('keyup',keyUp);
 }
 // ========== CONTROLLI GIROSCOPIO MOBILE ==========
-// Come Mario Kart / Asphalt: telefono orizzontale come volante
 (function () {
     'use strict';
 
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    var SOGLIA      = 3;   // gradi minimi per reagire
-    var SENSIBILITA = 20;  // gradi per sterzo massimo
+    var SOGLIA      = 3;
+    var SENSIBILITA = 20;
     var VELOCITA    = 300;
     var gyroAttivo  = false;
-    
-    // Calibrazione: salva la posizione neutra del telefono
-    var betaBase    = null;
-    var gammaBase   = null;
+
+    // Calibrazione con media mobile
+    var campioni    = [];
+    var MAX_CAMP    = 30;
+    var baseGamma   = null;
+    var calibrato   = false;
+    var sterzoCorrente = 0;
 
     // ── Indicatore visivo debug ──
     var dbg = document.createElement('div');
@@ -602,34 +604,49 @@ function resetGiocoCompleto() {
     ].join(';');
     document.body.appendChild(btnGyro);
 
-    var sterzoCorrente = 0;
+    // ── Bottone ricalibra ──
+    var btnCal = document.createElement('button');
+    btnCal.textContent = '🎯';
+    btnCal.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:999999;background:rgba(0,0,0,0.6);color:#fff;border:2px solid #ffcc00;border-radius:50%;width:48px;height:48px;font-size:1.4em;cursor:pointer;display:none;';
+    document.body.appendChild(btnCal);
+
+    function ricalibra() {
+        campioni = [];
+        calibrato = false;
+        baseGamma = null;
+        dbg.textContent = '⏳ Calibro...';
+    }
+    btnCal.addEventListener('click', ricalibra);
 
     function onGyro(e) {
-        var beta  = e.beta  !== null ? e.beta  : 0;
         var gamma = e.gamma !== null ? e.gamma : 0;
 
-        // Prima lettura: calibra la posizione neutra
-        if (betaBase === null) {
-            betaBase  = beta;
-            gammaBase = gamma;
+        // Fase calibrazione: accumula campioni
+        if (!calibrato) {
+            campioni.push(gamma);
+            dbg.style.display = 'block';
+            dbg.textContent = '⏳ Calibro ' + campioni.length + '/' + MAX_CAMP;
+            if (campioni.length >= MAX_CAMP) {
+                // Media dei campioni = posizione neutra
+                var somma = 0;
+                for (var i = 0; i < campioni.length; i++) somma += campioni[i];
+                baseGamma = somma / campioni.length;
+                calibrato = true;
+                dbg.textContent = '✅ Pronto! base:' + Math.round(baseGamma);
+            }
+            return;
         }
 
-        // Sterzo = differenza rispetto alla posizione neutra
-        // In landscape come volante, gamma è l'asse di sterzo principale
-        var deltaBeta  = beta  - betaBase;
-        var deltaGamma = gamma - gammaBase;
+        // Sterzo = differenza dalla posizione neutra
+        sterzoCorrente = gamma - baseGamma;
 
-        // Usa l'asse con più variazione (adattivo)
-        sterzoCorrente = Math.abs(deltaGamma) >= Math.abs(deltaBeta) ? deltaGamma : deltaBeta;
-
-        dbg.style.display = 'block';
         dbg.innerHTML = 'sterzo:' + Math.round(sterzoCorrente) +
             ' ◀' + (sterzoCorrente < -SOGLIA ? '✅':'❌') +
             ' ▶' + (sterzoCorrente > SOGLIA  ? '✅':'❌');
     }
 
     setInterval(function() {
-        if (!gyroAttivo) return;
+        if (!gyroAttivo || !calibrato) return;
         if (typeof myFerrari === 'undefined' || !myFerrari) return;
         if (myFerrari.hasCollided) return;
         if (typeof myCircuit === 'undefined' || !myCircuit) return;
@@ -655,25 +672,11 @@ function resetGiocoCompleto() {
 
     }, 50);
 
-    function calibra() {
-        betaBase  = null;
-        gammaBase = null;
-        dbg.textContent = '🎯 Calibrato!';
-        setTimeout(function(){ dbg.textContent = '✅ Gyro attivo'; }, 1000);
-    }
-
-    // Bottone calibrazione (tieni il telefono nella posizione neutra e tocca)
-    var btnCal = document.createElement('button');
-    btnCal.textContent = '🎯';
-    btnCal.title = 'Ricalibra posizione neutra';
-    btnCal.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:999999;background:rgba(0,0,0,0.6);color:#fff;border:2px solid #ffcc00;border-radius:50%;width:48px;height:48px;font-size:1.4em;cursor:pointer;display:none;';
-    btnCal.addEventListener('click', calibra);
-    document.body.appendChild(btnCal);
-
     function avviaGyro() {
         if (gyroAttivo) return;
         gyroAttivo = true;
         btnGyro.style.display = 'none';
+        btnCal.style.display = 'block';
 
         if (typeof DeviceOrientationEvent !== 'undefined' &&
             typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -682,20 +685,16 @@ function resetGiocoCompleto() {
                     if (r === 'granted') {
                         window.addEventListener('deviceorientation', onGyro, true);
                         dbg.style.display = 'block';
-                        dbg.textContent = '✅ Gyro attivo';
-                        btnCal.style.display = 'block';
                     } else {
                         gyroAttivo = false;
                         btnGyro.style.display = 'block';
-                        dbg.textContent = '❌ Permesso negato';
                         dbg.style.display = 'block';
+                        dbg.textContent = '❌ Permesso negato';
                     }
                 }).catch(function() { gyroAttivo = false; btnGyro.style.display = 'block'; });
         } else {
             window.addEventListener('deviceorientation', onGyro, true);
             dbg.style.display = 'block';
-            dbg.textContent = '✅ Gyro attivo';
-            btnCal.style.display = 'block';
         }
     }
 
