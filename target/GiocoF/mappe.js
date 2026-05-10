@@ -574,9 +574,10 @@ function resetGiocoCompleto() {
 
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    var SOGLIA     = 8;   // gradi minimi per sterzare
-    var VELOCITA   = 300; // velocità fissa
-    var gyroAttivo = false;
+    var SOGLIA       = 2;    // gradi minimi — reagisce subito
+    var SENSIBILITA  = 15;   // gradi per sterzo massimo (prima era 40)
+    var VELOCITA     = 300;
+    var gyroAttivo   = false;
     var gammaCorrente = 0;
 
     // ── Indicatore visivo debug ──
@@ -601,32 +602,31 @@ function resetGiocoCompleto() {
         var gamma = e.gamma !== null ? e.gamma : 0;
         gammaCorrente = gamma;
         dbg.style.display = 'block';
-        dbg.innerHTML = 'γ:' + Math.round(gamma) +
-            ' ◀' + (gamma < -SOGLIA ? '✅':'❌') +
-            ' ▶' + (gamma > SOGLIA ? '✅':'❌');
+        dbg.innerHTML = 'γ:' + Math.round(gamma);
     }
 
-    // ── Loop principale: velocità fissa + sterzo col giroscopio ──
     setInterval(function() {
         if (!gyroAttivo) return;
         if (typeof myFerrari === 'undefined' || !myFerrari) return;
         if (myFerrari.hasCollided) return;
         if (typeof myCircuit === 'undefined' || !myCircuit) return;
 
-        // Velocità sempre costante
         myFerrari.speed = VELOCITA;
 
-        // Sterzo proporzionale all'inclinazione
-        if (gammaCorrente < -SOGLIA) {
-            var intensita = Math.min(Math.abs(gammaCorrente) / 40, 1);
-            myFerrari.carImageCrop = [143, 233, 251, 32];
-            myFerrari.posX -= Math.round(200 * intensita);
-            if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
-        } else if (gammaCorrente > SOGLIA) {
-            var intensita = Math.min(Math.abs(gammaCorrente) / 40, 1);
-            myFerrari.carImageCrop = [7, 97, 171, 32];
-            myFerrari.posX += Math.round(200 * intensita);
-            if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
+        if (Math.abs(gammaCorrente) > SOGLIA) {
+            // Intensità proporzionale: da SOGLIA a SENSIBILITA = 0 a 1
+            var intensita = Math.min(Math.abs(gammaCorrente) / SENSIBILITA, 1);
+            var spostamento = Math.round(400 * intensita); // max 400 per step
+
+            if (gammaCorrente < 0) {
+                myFerrari.carImageCrop = [143, 233, 251, 32];
+                myFerrari.posX -= spostamento;
+                if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
+            } else {
+                myFerrari.carImageCrop = [7, 97, 171, 32];
+                myFerrari.posX += spostamento;
+                if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
+            }
         } else {
             myFerrari.carImageCrop = [7, 64, 132, 32];
         }
