@@ -585,11 +585,6 @@ function resetGiocoCompleto() {
     var calibrato = false;
     var sterzoCorrente = 0;
 
-    // ── Indicatore visivo debug ──
-    var dbg = document.createElement('div');
-    dbg.style.cssText = 'position:fixed;top:40px;left:8px;z-index:999999;background:rgba(0,0,0,0.75);color:#0ff;font-family:monospace;font-size:12px;padding:5px 8px;border-radius:6px;pointer-events:none;display:none;';
-    document.body.appendChild(dbg);
-
     // ── Bottone permesso iOS ──
     var btnGyro = document.createElement('button');
     btnGyro.textContent = '🎮 Attiva Giroscopio';
@@ -603,44 +598,30 @@ function resetGiocoCompleto() {
     ].join(';');
     document.body.appendChild(btnGyro);
 
-    // ── Bottone ricalibra ──
-    var btnCal = document.createElement('button');
-    btnCal.textContent = '🎯';
-    btnCal.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:999999;background:rgba(0,0,0,0.6);color:#fff;border:2px solid #ffcc00;border-radius:50%;width:48px;height:48px;font-size:1.4em;cursor:pointer;display:none;';
-    document.body.appendChild(btnCal);
-
-    function ricalibra() {
-        campioni = [];
-        calibrato = false;
-        baseGamma = null;
-        sterzoCorrente = 0;
-        dbg.textContent = '⏳ Calibro...';
-    }
-    btnCal.addEventListener('click', ricalibra);
+    // ── Messaggio calibrazione (sparisce dopo) ──
+    var msgCal = document.createElement('div');
+    msgCal.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(0,0,0,0.8);color:#ffcc00;font-family:Orbitron,monospace;font-size:0.8em;padding:8px 18px;border-radius:20px;pointer-events:none;display:none;letter-spacing:2px;';
+    document.body.appendChild(msgCal);
 
     function onGyro(e) {
         var gamma = e.gamma !== null ? e.gamma : 0;
 
         if (!calibrato) {
             campioni.push(gamma);
-            dbg.style.display = 'block';
-            dbg.textContent = '⏳ Calibro ' + campioni.length + '/' + MAX_CAMP;
+            msgCal.style.display = 'block';
+            msgCal.textContent = '⏳ Calibro... ' + campioni.length + '/' + MAX_CAMP;
             if (campioni.length >= MAX_CAMP) {
                 var somma = 0;
                 for (var i = 0; i < campioni.length; i++) somma += campioni[i];
                 baseGamma = somma / campioni.length;
                 calibrato = true;
-                dbg.textContent = '✅ Pronto!';
+                msgCal.textContent = '✅ Pronto! Via!';
+                setTimeout(function() { msgCal.style.display = 'none'; }, 1500);
             }
             return;
         }
 
-        // Sterzo senza inversione — sinistra=negativo, destra=positivo
         sterzoCorrente = gamma - baseGamma;
-
-        dbg.innerHTML = 'sterzo:' + Math.round(sterzoCorrente) +
-            ' ◀' + (sterzoCorrente < -SOGLIA ? '✅':'❌') +
-            ' ▶' + (sterzoCorrente > SOGLIA  ? '✅':'❌');
     }
 
     setInterval(function() {
@@ -652,19 +633,15 @@ function resetGiocoCompleto() {
         myFerrari.speed = VELOCITA;
 
         if (sterzoCorrente < -SOGLIA) {
-            // Inclina a sinistra → vai a sinistra
             var intensita = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
             myFerrari.carImageCrop = [143, 233, 251, 32];
             myFerrari.posX -= Math.round(500 * intensita);
             if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
-
         } else if (sterzoCorrente > SOGLIA) {
-            // Inclina a destra → vai a destra
             var intensita = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
             myFerrari.carImageCrop = [7, 97, 171, 32];
             myFerrari.posX += Math.round(500 * intensita);
             if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
-
         } else {
             myFerrari.carImageCrop = [7, 64, 132, 32];
         }
@@ -675,7 +652,6 @@ function resetGiocoCompleto() {
         if (gyroAttivo) return;
         gyroAttivo = true;
         btnGyro.style.display = 'none';
-        btnCal.style.display = 'block';
 
         if (typeof DeviceOrientationEvent !== 'undefined' &&
             typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -683,17 +659,13 @@ function resetGiocoCompleto() {
                 .then(function(r) {
                     if (r === 'granted') {
                         window.addEventListener('deviceorientation', onGyro, true);
-                        dbg.style.display = 'block';
                     } else {
                         gyroAttivo = false;
                         btnGyro.style.display = 'block';
-                        dbg.style.display = 'block';
-                        dbg.textContent = '❌ Permesso negato';
                     }
                 }).catch(function() { gyroAttivo = false; btnGyro.style.display = 'block'; });
         } else {
             window.addEventListener('deviceorientation', onGyro, true);
-            dbg.style.display = 'block';
         }
     }
 

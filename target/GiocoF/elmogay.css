@@ -2147,10 +2147,10 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════
-   RESPONSIVE MOBILE — Media Query
+   RESPONSIVE MOBILE
    ═══════════════════════════════════════════════════ */
 
-/* ── Messaggio "Gira il telefono" ── */
+/* Messaggio gira telefono */
 #rotate-msg {
     display: none;
     position: fixed;
@@ -2165,129 +2165,87 @@ body {
     text-align: center;
     gap: 20px;
 }
-#rotate-msg .rotate-icon {
-    font-size: 4em;
-    animation: rotateHint 1.5s ease-in-out infinite;
-}
-#rotate-msg p {
-    font-size: 1em;
-    letter-spacing: 3px;
-    color: #ffcc00;
-    margin: 0;
-}
+#rotate-msg .rotate-icon { font-size: 4em; animation: rotateHint 1.5s ease-in-out infinite; }
+#rotate-msg p { font-size: 1em; letter-spacing: 3px; color: #ffcc00; margin: 0; }
 @keyframes rotateHint {
     0%,100% { transform: rotate(0deg); }
     50%      { transform: rotate(90deg); }
 }
 
-/* ── Portrait su qualsiasi dispositivo touch: mostra messaggio ── */
+/* Portrait su mobile: mostra messaggio */
 @media screen and (orientation: portrait) and (hover: none) and (pointer: coarse) {
     #rotate-msg { display: flex !important; }
     body > *:not(#rotate-msg) { visibility: hidden; }
 }
 
-/* ── Landscape su mobile (altezza < 600px = schermo telefono orizzontale) ── */
+/* Landscape su mobile: schermo pieno */
 @media screen and (max-height: 600px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
 
-    /* Authbar compatta */
-    #authBar {
-        height: 32px !important;
-        padding: 0 8px !important;
-    }
-    #authBar .auth-btn {
-        padding: 4px 10px !important;
-        font-size: 0.72em !important;
-    }
+    #authBar { height: 32px !important; padding: 0 8px !important; }
+    #authBar .auth-btn { padding: 3px 8px !important; font-size: 0.7em !important; }
 
-    /* Splash compatta */
-    #splashContent {
-        padding: 20px 16px !important;
-        width: 85vw !important;
-    }
-    #splashTitle { font-size: 1.4em !important; }
-    #splashSubtitle { font-size: 0.75em !important; }
-    #startButton { padding: 10px 24px !important; font-size: 0.9em !important; }
-    #splashBadge { font-size: 0.55em !important; margin-bottom: 10px !important; }
-    .splash-divider { margin: 12px auto 14px !important; }
-
-    /* Selezione mappe compatta */
-    #selezioneTitle { font-size: 1.3em !important; margin: 0 !important; }
-    #selezioneSub, #selezioneSubtitle { font-size: 0.65em !important; }
-    #containerMappe {
-        gap: 12px !important;
-        margin: 10px 0 10px !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        justify-content: flex-start !important;
-        padding: 0 10px !important;
-    }
-    .map-card {
-        width: 160px !important;
-        flex-shrink: 0 !important;
-    }
-    .map-preview { height: 100px !important; }
-    .map-info { padding: 8px 10px 10px !important; }
-    .map-info h3 { font-size: 0.9em !important; }
-    .map-stats { display: none !important; }
-    .top10-btn { padding: 4px 0 !important; font-size: 0.65em !important; }
-
-    /* Gamecenter */
     #gamecenter {
         padding-bottom: 0 !important;
         justify-content: flex-start !important;
     }
     #gamecenter::before { padding-top: 32px !important; }
 
-    /* Dashboard */
     #dashboard {
         margin-top: 2px !important;
-        padding: 4px 12px !important;
-        font-size: 0.65em !important;
+        padding: 3px 10px !important;
+        font-size: 0.6em !important;
         letter-spacing: 2px !important;
     }
 
-    /* GameArea a schermo pieno */
+    /* GameArea occupa tutto lo schermo */
     #gameArea {
         width: 100vw !important;
         max-width: 100vw !important;
         aspect-ratio: unset !important;
-        height: calc(100vh - 90px) !important;
+        height: calc(100vh - 70px) !important;
         margin-top: 2px !important;
         border-radius: 0 !important;
         border-left: none !important;
         border-right: none !important;
     }
 
-    /* Tachimetro piccolo */
     #tachimetro {
-        width: 60px !important;
-        height: 60px !important;
+        width: 55px !important;
+        height: 55px !important;
         bottom: 4px !important;
         right: 4px !important;
     }
 
-    /* Barra controlli compatta */
-    #controls {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        margin-top: 4px !important;
-        padding: 6px 12px !important;
+    /* Nascondi barra controlli — non serve col giroscopio */
+    #controls { display: none !important; }
+
+    /* Splash compatta */
+    #splashContent { padding: 16px !important; width: 80vw !important; }
+    #splashTitle { font-size: 1.3em !important; }
+    #startButton { padding: 10px 22px !important; font-size: 0.85em !important; }
+    .splash-divider { margin: 10px auto !important; }
+    #splashBadge { margin-bottom: 8px !important; font-size: 0.5em !important; }
+
+    /* Selezione mappe */
+    #selezioneTitle { font-size: 1.2em !important; }
+    #containerMappe {
         gap: 10px !important;
+        margin: 8px 0 !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        padding: 0 8px !important;
     }
-    #playButton { padding: 8px 20px !important; font-size: 0.85em !important; }
-    #menuButton { padding: 7px 14px !important; font-size: 0.75em !important; }
-    #songName { font-size: 0.65em !important; max-width: 90px !important; }
+    .map-card { width: 150px !important; flex-shrink: 0 !important; }
+    .map-preview { height: 90px !important; }
+    .map-info { padding: 6px 8px 8px !important; }
+    .map-info h3 { font-size: 0.85em !important; }
+    .map-stats { display: none !important; }
+    .top10-btn { font-size: 0.6em !important; padding: 3px 0 !important; }
 
     /* Fine gara compatta */
-    #fineGaraMessage {
-        padding: 14px 18px !important;
-        min-width: 240px !important;
-    }
-    #fineGaraMessage h2 { font-size: 1em !important; }
-    .tempo-finale { font-size: 1.6em !important; }
-    .game-over-button {
-        padding: 7px 14px !important;
-        font-size: 0.78em !important;
-        min-width: 120px !important;
-    }
+    #fineGaraMessage { padding: 12px 16px !important; min-width: 220px !important; }
+    #fineGaraMessage h2 { font-size: 0.9em !important; }
+    .tempo-finale { font-size: 1.4em !important; }
+    .game-over-button { padding: 6px 12px !important; font-size: 0.72em !important; min-width: 100px !important; }
 }
