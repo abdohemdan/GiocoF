@@ -579,11 +579,10 @@ function resetGiocoCompleto() {
     var VELOCITA    = 300;
     var gyroAttivo  = false;
 
-    // Calibrazione con media mobile
-    var campioni    = [];
-    var MAX_CAMP    = 30;
-    var baseGamma   = null;
-    var calibrato   = false;
+    var campioni  = [];
+    var MAX_CAMP  = 30;
+    var baseGamma = null;
+    var calibrato = false;
     var sterzoCorrente = 0;
 
     // ── Indicatore visivo debug ──
@@ -621,24 +620,22 @@ function resetGiocoCompleto() {
     function onGyro(e) {
         var gamma = e.gamma !== null ? e.gamma : 0;
 
-        // Fase calibrazione: accumula campioni
         if (!calibrato) {
             campioni.push(gamma);
             dbg.style.display = 'block';
             dbg.textContent = '⏳ Calibro ' + campioni.length + '/' + MAX_CAMP;
             if (campioni.length >= MAX_CAMP) {
-                // Media dei campioni = posizione neutra
                 var somma = 0;
                 for (var i = 0; i < campioni.length; i++) somma += campioni[i];
                 baseGamma = somma / campioni.length;
                 calibrato = true;
-                dbg.textContent = '✅ Pronto! base:' + Math.round(baseGamma);
+                dbg.textContent = '✅ Pronto!';
             }
             return;
         }
 
-        // Sterzo = differenza dalla posizione neutra
-        sterzoCorrente = gamma - baseGamma;
+        // ⚠️ Invertito il segno: -gamma per correggere la direzione
+        sterzoCorrente = -(gamma - baseGamma);
 
         dbg.innerHTML = 'sterzo:' + Math.round(sterzoCorrente) +
             ' ◀' + (sterzoCorrente < -SOGLIA ? '✅':'❌') +
