@@ -574,8 +574,8 @@ function resetGiocoCompleto() {
 
     if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
 
-    var SOGLIA      = 3;
-    var SENSIBILITA = 20;
+    var SOGLIA      = 2;
+    var SENSIBILITA = 15;
     var VELOCITA    = 300;
     var gyroAttivo  = false;
 
@@ -613,6 +613,7 @@ function resetGiocoCompleto() {
         campioni = [];
         calibrato = false;
         baseGamma = null;
+        sterzoCorrente = 0;
         dbg.textContent = '⏳ Calibro...';
     }
     btnCal.addEventListener('click', ricalibra);
@@ -634,8 +635,8 @@ function resetGiocoCompleto() {
             return;
         }
 
-        // ⚠️ Invertito il segno: -gamma per correggere la direzione
-        sterzoCorrente = -(gamma - baseGamma);
+        // Sterzo senza inversione — sinistra=negativo, destra=positivo
+        sterzoCorrente = gamma - baseGamma;
 
         dbg.innerHTML = 'sterzo:' + Math.round(sterzoCorrente) +
             ' ◀' + (sterzoCorrente < -SOGLIA ? '✅':'❌') +
@@ -650,19 +651,20 @@ function resetGiocoCompleto() {
 
         myFerrari.speed = VELOCITA;
 
-        if (Math.abs(sterzoCorrente) > SOGLIA) {
-            var intensita   = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
-            var spostamento = Math.round(500 * intensita);
+        if (sterzoCorrente < -SOGLIA) {
+            // Inclina a sinistra → vai a sinistra
+            var intensita = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
+            myFerrari.carImageCrop = [143, 233, 251, 32];
+            myFerrari.posX -= Math.round(500 * intensita);
+            if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
 
-            if (sterzoCorrente < 0) {
-                myFerrari.carImageCrop = [143, 233, 251, 32];
-                myFerrari.posX -= spostamento;
-                if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
-            } else {
-                myFerrari.carImageCrop = [7, 97, 171, 32];
-                myFerrari.posX += spostamento;
-                if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
-            }
+        } else if (sterzoCorrente > SOGLIA) {
+            // Inclina a destra → vai a destra
+            var intensita = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
+            myFerrari.carImageCrop = [7, 97, 171, 32];
+            myFerrari.posX += Math.round(500 * intensita);
+            if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
+
         } else {
             myFerrari.carImageCrop = [7, 64, 132, 32];
         }
