@@ -2216,8 +2216,6 @@ body {
         right: 4px !important;
     }
 
-    /* Nascondi barra controlli — non serve col giroscopio */
-    #controls { display: none !important; }
 
     /* Splash compatta */
     #splashContent { padding: 16px !important; width: 80vw !important; }
