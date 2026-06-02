@@ -576,7 +576,12 @@ function resetGiocoCompleto() {
 
     var SOGLIA      = 2;
     var SENSIBILITA = 15;
-    var VELOCITA    = 300;
+    var CRUISE      = 300;   // velocità di crociera automatica (km equivalenti interni)
+    var MAX_VEL     = 500;   // velocità massima (tenendo premuto ACCELERA)
+    var MIN_VEL     = -200;  // limite in frenata/retromarcia
+    var ACCEL       = 35;    // incremento velocità per tick mentre acceleri
+    var DECEL_FRENO = 60;    // decremento velocità per tick mentre freni
+    var EASE_CRUISE = 18;    // quanto la velocità si avvicina alla crociera senza input
     var gyroAttivo  = false;
 
     var campioni  = [];
@@ -584,6 +589,10 @@ function resetGiocoCompleto() {
     var baseGamma = null;
     var calibrato = false;
     var sterzoCorrente = 0;
+
+    // Stato pulsanti touch accelera/frena
+    var accelerando = false;
+    var frenando    = false;
 
     // ── Bottone permesso iOS ──
     var btnGyro = document.createElement('button');
@@ -602,6 +611,47 @@ function resetGiocoCompleto() {
     var msgCal = document.createElement('div');
     msgCal.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(0,0,0,0.8);color:#ffcc00;font-family:Orbitron,monospace;font-size:0.8em;padding:8px 18px;border-radius:20px;pointer-events:none;display:none;letter-spacing:2px;';
     document.body.appendChild(msgCal);
+
+    // ── Pulsanti touch ACCELERA / FRENA (minimo ingombro, dentro l'area di gioco) ──
+    function creaPedale(simbolo, posizione) {
+        var b = document.createElement('button');
+        b.textContent = simbolo;
+        b.style.cssText = [
+            'position:absolute', 'bottom:12px', posizione,
+            'z-index:50', 'width:58px', 'height:58px', 'border-radius:50%',
+            'border:2px solid rgba(255,204,0,0.55)',
+            'background:rgba(0,0,0,0.42)', 'color:#ffcc00',
+            'font-size:1.5em', 'font-weight:700', 'line-height:1',
+            'cursor:pointer', 'touch-action:none', 'user-select:none',
+            '-webkit-user-select:none', '-webkit-tap-highlight-color:transparent',
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'backdrop-filter:blur(2px)', 'padding:0'
+        ].join(';');
+        return b;
+    }
+
+    // ACCELERA a destra (sopra il tachimetro), FRENA a sinistra
+    var btnAccel = creaPedale('▲', 'right:84px');
+    var btnFreno = creaPedale('▼', 'left:14px');
+
+    function legaPedale(btn, premi, rilascia) {
+        function onPress(e) { if (e) e.preventDefault(); premi();   btn.style.background = 'rgba(255,204,0,0.32)'; }
+        function onRelease(e) { if (e) e.preventDefault(); rilascia(); btn.style.background = 'rgba(0,0,0,0.42)'; }
+        btn.addEventListener('touchstart', onPress,   { passive: false });
+        btn.addEventListener('touchend',   onRelease, { passive: false });
+        btn.addEventListener('touchcancel', onRelease, { passive: false });
+        // Fallback mouse (per provare da desktop)
+        btn.addEventListener('mousedown', onPress);
+        btn.addEventListener('mouseup',   onRelease);
+        btn.addEventListener('mouseleave', onRelease);
+    }
+
+    legaPedale(btnAccel, function () { accelerando = true; }, function () { accelerando = false; });
+    legaPedale(btnFreno, function () { frenando    = true; }, function () { frenando    = false; });
+
+    var areaGioco = document.getElementById('gameArea');
+    if (areaGioco) { areaGioco.appendChild(btnAccel); areaGioco.appendChild(btnFreno); }
+    else { document.body.appendChild(btnAccel); document.body.appendChild(btnFreno); }
 
     function onGyro(e) {
         var gamma = e.gamma !== null ? e.gamma : 0;
@@ -625,27 +675,39 @@ function resetGiocoCompleto() {
     }
 
     setInterval(function() {
-        if (!gyroAttivo || !calibrato) return;
-        if (typeof myFerrari === 'undefined' || !myFerrari) return;
+        if (typeof myFerrari === 'undefined' || !myFerrari) { accelerando = false; frenando = false; return; }
         if (myFerrari.hasCollided) return;
         if (typeof myCircuit === 'undefined' || !myCircuit) return;
 
-        myFerrari.speed = VELOCITA;
-
-        if (sterzoCorrente < -SOGLIA) {
-            var intensita = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
-            myFerrari.carImageCrop = [143, 233, 251, 32];
-            myFerrari.posX -= Math.round(500 * intensita);
-            if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
-        } else if (sterzoCorrente > SOGLIA) {
-            var intensita = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
-            myFerrari.carImageCrop = [7, 97, 171, 32];
-            myFerrari.posX += Math.round(500 * intensita);
-            if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
+        // ── Velocità: frena / accelera / crociera automatica ──
+        if (frenando) {
+            myFerrari.speed -= DECEL_FRENO;
+            if (myFerrari.speed < MIN_VEL) myFerrari.speed = MIN_VEL;
+        } else if (accelerando) {
+            myFerrari.speed += ACCEL;
+            if (myFerrari.speed > MAX_VEL) myFerrari.speed = MAX_VEL;
         } else {
-            myFerrari.carImageCrop = [7, 64, 132, 32];
+            // Nessun pulsante premuto: avvicina dolcemente la velocità alla crociera
+            if (myFerrari.speed < CRUISE)      myFerrari.speed = Math.min(CRUISE, myFerrari.speed + EASE_CRUISE);
+            else if (myFerrari.speed > CRUISE) myFerrari.speed = Math.max(CRUISE, myFerrari.speed - EASE_CRUISE);
         }
 
+        // ── Sterzo: solo quando il giroscopio è calibrato ──
+        if (calibrato) {
+            if (sterzoCorrente < -SOGLIA) {
+                var intensitaL = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
+                myFerrari.carImageCrop = [143, 233, 251, 32];
+                myFerrari.posX -= Math.round(500 * intensitaL);
+                if (myFerrari.posX < -5 * myCircuit.roadW) myFerrari.posX = -5 * myCircuit.roadW;
+            } else if (sterzoCorrente > SOGLIA) {
+                var intensitaR = Math.min(Math.abs(sterzoCorrente) / SENSIBILITA, 1);
+                myFerrari.carImageCrop = [7, 97, 171, 32];
+                myFerrari.posX += Math.round(500 * intensitaR);
+                if (myFerrari.posX > 5 * myCircuit.roadW) myFerrari.posX = 5 * myCircuit.roadW;
+            } else {
+                myFerrari.carImageCrop = [7, 64, 132, 32];
+            }
+        }
     }, 50);
 
     function avviaGyro() {
