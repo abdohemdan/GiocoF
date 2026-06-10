@@ -1,0 +1,21 @@
+# Output di compilazione Maven
+/target/
+*.class
+*.war
+
+# Variabili d'ambiente / segreti (non vanno MAI su Git)
+.env
+*.env
+
+# File di NetBeans / IDE
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+.nb-gradle/
+.idea/
+*.iml
+
+# Sistema operativo
+Thumbs.db
+.DS_Store

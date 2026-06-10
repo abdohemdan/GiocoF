@@ -23,9 +23,10 @@ import org.json.JSONObject;
 @WebServlet("/GoogleCallback")
 public class GoogleCallbackServlet extends HttpServlet {
 
-    private static final String CLIENT_ID = "288750040588-hsq2eth0pdue8atftbds0ri20gb6fa95.apps.googleusercontent.com";
-    private static final String CLIENT_SECRET = "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";
-    private static final String REDIRECT_URI = "https://supergiuliokart.onrender.com/GoogleCallback";
+private static final String CLIENT_ID     = System.getenv("GOOGLE_CLIENT_ID");
+private static final String CLIENT_SECRET = System.getenv("GOOGLE_CLIENT_SECRET");
+private static final String REDIRECT_URI  = System.getenv("GOOGLE_REDIRECT_URI");
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
